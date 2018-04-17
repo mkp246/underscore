@@ -1,6 +1,7 @@
-var _ = function(number) {
-  _.time = number;
-  return _;
+var _ = function(input) {
+  var newObject = Object.create(_);
+  newObject.obj = input;
+  return newObject;
 };
 
 _.each = function(array, callback, context) {
@@ -40,7 +41,7 @@ _.size = function(obj) {
 
 _.toArray = function(obj) {
   var arr = [];
-  Object.keys(obj).forEach(function(key, index) {
+  Object.keys(obj).forEach(function(key) {
     arr.push(obj[key]);
   });
   return arr;
@@ -57,17 +58,34 @@ _.sample = function(arr, len) {
   }
 };
 
-_.map = function(obj, callback) {
-  if (Array.isArray(obj)) {
+_.map = function(obj, callback, context) {
+  if (this.obj !== undefined) {
+    callback = obj;
+    context = callback;
+    obj = this.obj;
+  }
+  if (obj === null) return [];
+  var result = [];
+  if (typeof callback === 'string') {
+    _.each(obj, function(val) {
+      result.push(val[callback]);
+    });
+    return result;
+  }
+  //array like objects {length :2, 0:'hello', 1:'world'}
+  if (obj.length === Object.keys(obj).length - 1 || Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
+      result.push(callback.bind(context)(obj[i], i, obj));
     }
+    return result;
   } else {
     Object.keys(obj).forEach(function(key) {
       callback(obj[key], key);
     });
   }
 };
+
+_.collect = _.map;
 
 _.filter = function(obj, callback) {
   if (Array.isArray(obj)) {
