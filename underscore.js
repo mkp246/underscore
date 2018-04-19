@@ -12,7 +12,7 @@ _.each = function(array, callback, context) {
     }
   } else {
     Object.keys(array).forEach(function(key) {
-      callback(array[key], key, context);
+      callback.bind(context)(array[key], key, array);
     });
   }
   return array;
@@ -87,43 +87,156 @@ _.map = function(obj, callback, context) {
 
 _.collect = _.map;
 
-_.filter = function(obj, callback) {
-  if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
+_.find = function(array, predicate) {
+  if (predicate === undefined) {
+    _.each(array, predicate);
+    return array.length;
+  }
+  if (Array.isArray(array)) {
+    if (typeof predicate === 'function') {
+      return array.find(predicate);
+    } else {
+      return array.find(function(value) {
+        return Object.keys(predicate).every(function(key) {
+          return value[key] === predicate[key];
+        });
+      });
     }
   } else {
-    Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+    if (typeof predicate === 'function') {
+      var idx = Object.keys(array).find(function(key) {
+        return predicate(array[key], key);
+      });
+      return array[idx];
+    } else {
+      return Object.values(array).find(function(value) {
+        return Object.keys(predicate).every(function(key) {
+          return value[key] === predicate[key];
+        });
+      });
+    }
+  }
+};
+
+_.findIndex = function(obj, predicate, context) {
+  if (Array.isArray(obj)) {
+    return obj.findIndex(predicate.bind(context));
+  } else {
+    Object.keys(obj).find(function(key) {
+      return callback.bind(context)(obj[key], key);
     });
   }
 };
 
-_.find = function(obj, callback) {
+_.detect = _.find;
+
+_.filter = function(obj, predicate, context) {
+  if (this.obj !== undefined) {
+    context = predicate;
+    predicate = obj;
+    obj = this.obj;
+  }
+  if (typeof predicate === 'string') {
+    return _.filter(obj, function(val) {
+      return Boolean(val[predicate]);
+    });
+  }
+  if (typeof predicate === 'object') {
+    return obj.filter(function(val) {
+      return Object.keys(predicate).every(function(value) {
+        return predicate[value] === val[value];
+      });
+    });
+  }
+  var result = [];
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
+      if (predicate.bind(context)(obj[i], i, obj)) result.push(obj[i]);
     }
+    return result;
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+      if (predicate.bind(context)(obj[key], key)) result.push(obj[key]);
+    });
+    return result;
+  }
+};
+
+_.select = _.filter;
+
+_.reject = function(obj, predicate, context) {
+  var result = [];
+  if (typeof predicate === 'string') {
+    return obj.filter(function(val) {
+      return val[predicate] === undefined;
+    });
+  }
+  if (typeof predicate === 'object') {
+    return obj.filter(function(val) {
+      return Object.keys(predicate).some(function(value) {
+        return predicate[value] !== val[value];
+      });
+    });
+  }
+  if (Array.isArray(obj)) {
+    for (var i = 0, length = obj.length; i < length; i++) {
+      if (!predicate.bind(context)(obj[i], i, obj)) result.push(obj[i]);
+    }
+    return result;
+  } else {
+    Object.keys(obj).forEach(function(key) {
+      predicate.bind(context)(obj[key], key);
     });
   }
 };
 
+_.identity = function(input) {
+  return input;
+};
+_.every = function(obj, predicate, context) {
+  if (typeof predicate === 'string') {
+    return obj.every(function(value) {
+      return Boolean(value[predicate]);
+    });
+  }
+  if (typeof predicate === 'object') {
+    return obj.every(function(value) {
+      return Object.keys(predicate).every(function(key) {
+        return value[key] === predicate[key];
+      });
+    });
+  }
+  if (Array.isArray(obj)) {
+    for (var i = 0, length = obj.length; i < length; i++) {
+      if (!predicate.bind(context)(obj[i], i, obj)) return false;
+    }
+    return true;
+  } else {
+    return Object.keys(obj).every(function(key) {
+      return predicate.bind(context)(obj[key], key);
+    });
+  }
+};
+
+_.isNumber = function(input) {
+  return typeof input === 'number';
+};
+
+_.isObject = function(input) {
+  return typeof input === 'object';
+};
+
+_.hasOwnProperty = function(object, key) {
+  var obj = {};
+  if (!_.isObject(object)) {
+    key = object;
+    object = this;
+  }
+  return obj.__proto__.hasOwnProperty.call(object, key);
+};
+
+_.all = _.every;
 _.some = function(obj, callback) {
-  if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
-    }
-  } else {
-    Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
-    });
-  }
-};
-
-_.every = function(obj, callback) {
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       callback(obj[i], i, obj);
@@ -147,18 +260,6 @@ _.max = function(obj, callback) {
   }
 };
 _.min = function(obj, callback) {
-  if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
-    }
-  } else {
-    Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
-    });
-  }
-};
-
-_.reject = function(obj, callback) {
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       callback(obj[i], i, obj);
@@ -218,14 +319,30 @@ _.indexBy = function(obj, callback) {
   }
 };
 
-_.reduce = function(obj, callback, init) {
+_.reduce = function(obj, callback, init, context) {
+  if (this.obj !== undefined) {
+    init = callback;
+    callback = obj;
+    obj = this.obj;
+  }
+  if (obj === null) return init;
+  if (Array.isArray(obj) && !Boolean(obj.length) && callback === undefined &&
+      init === void 0) {
+    return void 0;
+  }
+  if (Array.isArray(obj) && obj.length === 1 && init === undefined) {
+    return obj[0];
+  }
   var current = init || 0;
   callback = callback || function(memo, num) {
     return memo + num;
   };
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
-      callback(current, obj[i], i, obj);
+      current = callback.bind(context)(current, obj[i], i, obj);
+      if (current === 0 && i === 0) {
+        current = obj[i];
+      }
     }
     return current;
   } else {
@@ -236,34 +353,52 @@ _.reduce = function(obj, callback, init) {
   }
 };
 
-_.reduceRight = function(obj, callback, init) {
+_.foldl = _.reduce;
+_.inject = _.reduce;
+
+_.reduceRight = function(obj, callback, init, context) {
+  if (this.obj !== undefined) {
+    init = callback;
+    callback = obj;
+    obj = this.obj;
+  }
+  if (obj === null) return init;
+  if (Array.isArray(obj) && !Boolean(obj.length) && callback === undefined &&
+      init === void 0) {
+    return void 0;
+  }
+  if (Array.isArray(obj) && obj.length === 1 && init === undefined) {
+    return obj[0];
+  }
   var current = init || 0;
   callback = callback || function(memo, num) {
-    return memo + num;
+    return Number(memo) + Number(num);
   };
   if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(current, obj[i], i, obj);
+    var start = obj.length - 1;
+    for (var i = start; i > -1; i--) {
+      if (i === start && typeof obj[start] === 'string') {
+        current = '';
+      }
+      current = callback.bind(context)(current, obj[i], i, obj);
+      if (current === 0 && i === 0) {
+        current = obj[i];
+      }
     }
     return current;
   } else {
-    _.each(obj, function(val, idx, arr) {
-      callback(current, val, idx, arr);
+    _.each(Object.keys(obj).reverse(), function(val) {
+      current = callback(current, obj[val], val, obj);
     });
-    return obj.length === null ? null : obj.length || Object.keys(obj).length;
+    var temp = current || ((obj.length === null) ? null : (obj.length || Object.keys(obj).length));
+    return obj.length || temp;
   }
 };
 
-_.findIndex = function(obj, callback) {
-  if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
-    }
-  } else {
-    Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
-    });
-  }
+_.foldr = _.reduceRight;
+
+_.keys = function(obj) {
+  return Object.keys(obj);
 };
 
 _.findLastIndex = function(obj, callback) {
