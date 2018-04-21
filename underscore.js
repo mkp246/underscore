@@ -360,41 +360,151 @@ _.isUndefined = function(val) {
   return typeof val === 'undefined';
 };
 
-_.max = function(obj, callback) {
+_.max = function(obj, cb, context) {
+  var callback = cb;
   if (!Boolean(obj)) return -Infinity;
-  callback = callback || _.identity;
+  if (typeof callback === 'string') callback = function(o) {
+    return o[cb];
+  };
+  if (callback === 0 && typeof obj[0] === 'object') callback = function(o) {
+    return o[cb];
+  };
+  if (typeof callback !== 'function') callback = _.identity;
+  var max = -Infinity;
+  var maxObj = -Infinity;
+  if (Object.keys(obj).length === 0) return -Infinity;
   if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
-    }
+    _.each(obj, function(val, idx) {
+      var cbResult = callback.bind(context)(val, idx, obj);
+      if (cbResult >= max) {
+        max = cbResult;
+        maxObj = val;
+      }
+    });
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+      callback.bind(context)(obj[key], key);
     });
   }
-};
-_.min = function(obj, callback) {
-  if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
-    }
-  } else {
-    Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
-    });
-  }
+  return maxObj;
 };
 
-_.groupBy = function(obj, callback) {
+_.range = function(start, stop, step) {
+  if (arguments.length == 1) {
+    stop = arguments[0];
+    start = 0;
+    step = 1;
+  } else if (arguments.length == 2) {
+    step = 1;
+  }
+
+  function comp(v1, v2) {
+    return (step > 0) ? (v1 < v2) : (v1 > v2);
+  }
+
+  var result = [];
+  for (let i = start; comp(i, stop); i += step) {
+    result.push(i);
+  }
+  return result;
+};
+
+_.min = function(obj, cb, context) {
+  var callback = cb;
+  if (!Boolean(obj)) return Infinity;
+  if (typeof callback === 'string') callback = function(o) {
+    return o[cb];
+  };
+  if (callback === 0 && typeof obj[0] === 'object') callback = function(o) {
+    return o[cb];
+  };
+  if (typeof callback !== 'function') callback = _.identity;
+  var min = Infinity;
+  var minObj = Infinity;
+  if (Object.keys(obj).length === 0) return Infinity;
+  if (Array.isArray(obj)) {
+    _.each(obj, function(val, idx) {
+      var cbResult = callback.bind(context)(val, idx, obj);
+      if (cbResult !== null && cbResult <= min) {
+        min = cbResult;
+        minObj = val;
+      }
+    });
+  } else {
+    Object.keys(obj).forEach(function(key) {
+      callback.bind(context)(obj[key], key);
+    });
+  }
+  return minObj;
+};
+
+_.sortBy = function(array, predicate) {
+  if (predicate === undefined) predicate = _.identity;
+  var newPredicate = predicate;
+  if (typeof  predicate === 'string') {
+    newPredicate = function(val) {
+      return val[predicate];
+    };
+  }
+  if (!Array.isArray(array)) array = Object.values(array);
+  return array.sort(function(val1, val2) {
+    var cmp1 = newPredicate(val1);
+    var cmp2 = newPredicate(val2);
+    var cmpResult;
+    if (cmp1 === undefined && cmp2 === undefined) {
+      cmpResult = 0;
+    } else if (cmp1 === undefined) {
+      cmpResult = 1;
+    } else if (cmp2 === undefined) {
+      cmpResult = -1;
+    } else {
+      cmpResult = (cmp1 > cmp2) ? +1 : -1;
+    }
+    return cmpResult;
+  });
+};
+
+_.object = function(list, values) {
+  var result = {};
+  if (values === undefined) {
+    _.each(list, function(item) {
+      result[item[0]] = item[1];
+    });
+  } else {
+    _.each(list, function(val, idx) {
+      result[val] = values[idx];
+    });
+  }
+  return result;
+};
+
+_.groupBy = function(obj, pred, context) {
+  var result = {};
+  var predicate = pred;
+  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
+    return val[pred];
+  };
+  if (predicate === undefined) predicate = _.identity;
+  if (Array.isArray(predicate)) {
+    predicate = function(val) {
+      _.each(pred, function(key) {
+        val = val[key];
+      });
+      return val;
+    };
+  }
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
+      var group = predicate.bind(context)(obj[i], i, obj);
+      if (!Array.isArray(result[group])) result[group] = [];
+      result[group].push(obj[i]);
     }
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+      predicate.bind(context)(obj[key], key);
     });
   }
+  return result;
 };
 
 _.countBy = function(obj, callback) {
