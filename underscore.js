@@ -22,17 +22,11 @@ _.times = function() {
 
 };
 
-_.include = function(arr, num) {
-  return arr.indexOf(num) > -1;
-};
-
 _.forEach = _.each;
 _.constant = function(val) {
-  function constant() {
+  return function() {
     return val;
-  }
-
-  return constant();
+  };
 };
 
 _.size = function(obj) {
@@ -236,19 +230,139 @@ _.hasOwnProperty = function(object, key) {
 };
 
 _.all = _.every;
-_.some = function(obj, callback) {
+
+_.some = function(obj, predicate, context) {
+  if (typeof predicate === 'string') {
+    return obj.every(function(value) {
+      return Boolean(value[predicate]);
+    });
+  }
+  if (predicate === undefined) predicate = _.identity;
+  if (typeof predicate === 'object') {
+    return obj.some(function(value) {
+      return Object.keys(predicate).every(function(key) {
+        return value[key] === predicate[key];
+      });
+    });
+  }
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
+      if (predicate.bind(context)(obj[i], i, obj)) return true;
     }
+    return false;
   } else {
-    Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+    return Object.keys(obj).some(function(key) {
+      if (predicate.bind(context)(obj[key], key)) return true;
     });
   }
 };
 
+_.any = _.some;
+
+_.include = function(arr, num, fromIndex) {
+  if (this.obj !== undefined) {
+    fromIndex = num;
+    num = arr;
+    arr = this.obj;
+  }
+  if (arr === null || arr === undefined) return false;
+  if (typeof fromIndex === 'boolean') fromIndex = 0;
+  if (isNaN(num)) {
+    return _.any(arr, function(val) {
+      return isNaN(val);
+    });
+  }
+  if (Array.isArray(arr)) return arr.indexOf(num, fromIndex) > -1;
+  if (typeof arr === 'object') {
+    return _.hasOwnProperty(arr, num) || _.any(arr, function(val) {
+      return val === num;
+    });
+  }
+  return false;
+};
+
+_.includes = _.include;
+_.contains = _.include;
+
+_.invoke = function(list, method, ...args) {
+  var result = [];
+  var toExecute, context;
+  _.each(list, function(listItem) {
+    context = listItem;
+    if (Array.isArray(method)) {
+      toExecute = listItem[method[0]];
+      _.each(method.slice(1), function(val) {
+        if (toExecute === undefined) {
+          return;
+        }
+        if (toExecute === null) {
+          toExecute = undefined;
+          return;
+        }
+        context = toExecute;
+        toExecute = toExecute[val];
+      });
+    } else if (typeof method === 'function') {
+      result.push(method.call(listItem, ...args));
+      return;
+    } else {
+      toExecute = listItem[method];
+    }
+    if (toExecute === null || toExecute === void 0) {
+      result.push(toExecute);
+    } else if (typeof toExecute !== 'function') {
+      throw new TypeError();
+    } else {
+      result.push(toExecute.call(context, ...args));
+    }
+  });
+  return result;
+};
+
+_.partial = function(func, ...args) {
+  return function(...someMoreArgs) {
+    return func(...args, ...someMoreArgs);
+  };
+};
+
+_.pluck = function(array, key) {
+  var result = [];
+  _.each(array, function(element) {
+    result.push(element[key]);
+  });
+  return result;
+};
+
+_.where = function(list, props) {
+  var result = [];
+  _.each(list, function(item) {
+    if (Object.keys(props).every(function(value) {
+      return props[value] === item[value];
+    })) {
+      result.push(item);
+    }
+  });
+  return result;
+};
+
+_.findWhere = function(list, props) {
+  for (let i = 0, length = list.length; i < length; i++) {
+    var item = list[i];
+    if (Object.keys(props).every(function(value) {
+      return props[value] === item[value];
+    })) {
+      return item;
+    }
+  }
+};
+
+_.isUndefined = function(val) {
+  return typeof val === 'undefined';
+};
+
 _.max = function(obj, callback) {
+  if (!Boolean(obj)) return -Infinity;
+  callback = callback || _.identity;
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       callback(obj[i], i, obj);
