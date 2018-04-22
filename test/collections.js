@@ -613,7 +613,7 @@
     var a = {x: -Infinity};
     var b = {x: -Infinity};
     var iterator = function(o){ return o.x; };
-    //assert.strictEqual(_.max([a, b], iterator), a, 'Respects iterator return value of -Infinity');
+    //assert.strictEqual(_.max([a, b], iterator), a, 'Respects iterator return value of -Infinity');//TODO
 
     assert.deepEqual(_.max([{a: 1}, {a: 0, b: 3}, {a: 4}, {a: 2}], 'a'), {a: 4}, 'String keys use property iterator');
 
@@ -656,7 +656,7 @@
     var a = {x: Infinity};
     var b = {x: Infinity};
     var iterator = function(o){ return o.x; };
-    //assert.strictEqual(_.min([a, b], iterator), a, 'Respects iterator return value of Infinity');
+    //assert.strictEqual(_.min([a, b], iterator), a, 'Respects iterator return value of Infinity');//TODO
 
     assert.deepEqual(_.min([{a: 1}, {a: 0, b: 3}, {a: 4}, {a: 2}], 'a'), {a: 0, b: 3}, 'String keys use property iterator');
 
@@ -707,7 +707,7 @@
       return pair.x;
     });
 
-    //assert.deepEqual(actual, stableArray, 'sortBy should be stable for objects');
+    //assert.deepEqual(actual, stableArray, 'sortBy should be stable for objects');//TODO
 
     list = ['q', 'w', 'e', 'r', 't', 'y'];
     assert.deepEqual(_.sortBy(list), ['e', 'q', 'r', 't', 'w', 'y'], 'uses _.identity if iterator is not specified');

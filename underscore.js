@@ -1,3 +1,4 @@
+//******Collection module start*********//
 var _ = function(input) {
   var newObject = Object.create(_);
   newObject.obj = input;
@@ -361,7 +362,11 @@ _.max = function(obj, cb, context) {
     });
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback.bind(context)(obj[key], key);
+      var cbResult = callback.bind(context)(obj[key], key, obj);
+      if (cbResult >= max) {
+        max = cbResult;
+        maxObj = obj[key];
+      }
     });
   }
   return maxObj;
@@ -410,7 +415,11 @@ _.min = function(obj, cb, context) {
     });
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback.bind(context)(obj[key], key);
+      var cbResult = callback.bind(context)(obj[key], key);
+      if (cbResult !== null && cbResult <= min) {
+        min = cbResult;
+        minObj = obj[key];
+      }
     });
   }
   return minObj;
@@ -579,18 +588,37 @@ _.size = function(obj) {
   return Object.keys(obj).length;
 };
 
-_.partition = function(obj, callback) {
+_.partition = function(obj, cb, context) {
+  var callback = cb;
+  var result = [[], []];
+  callback = callback || _.isTrue;
+  if (typeof callback === 'string') callback = function(val) {
+    return _.isTrue(val[cb]);
+  };
+  if (typeof callback == 'object') callback = function(val) {
+    return Object.keys(cb).every(function(key) {
+      return val[key] === cb[key];
+    });
+  };
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
+      var cbResult = callback.bind(context)(obj[i], i, obj);
+      var index = Boolean(cbResult) ? 0 : 1;
+      result[index].push(obj[i]);
     }
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+      var cbResult = callback.bind(context)(obj[key], key, obj);
+      var index = Boolean(cbResult) ? 0 : 1;
+      result[index].push(obj[key]);
     });
   }
+  return result;
 };
 
+_.isTrue = function(val) {
+  return Boolean(val);
+};
 _.reduce = function(obj, callback, init, context) {
   if (this.obj !== undefined) {
     init = callback;
@@ -729,3 +757,37 @@ _.omit = function(obj, callback, init) {
   return current;
 
 };
+
+_.isElement = function(node) {
+  return node.nodeType === Node.ELEMENT_NODE;
+};
+
+//******Collection module ends*********//
+//*********Arrays module starts*********//
+
+var fixOOArgs = function(thisArg, otherArgs) {
+  if (thisArg.obj !== undefined) {
+    otherArgs[3] = otherArgs[2];
+    otherArgs[2] = otherArgs[1];
+    otherArgs[1] = otherArgs[0];
+    otherArgs[0] = thisArg.obj;
+  }
+  return _.toArray(otherArgs);
+};
+
+_.first = function(array, n) {
+  [array, n] = fixOOArgs(this, arguments);
+  if (array === undefined || array === null || array.length === 0) {
+    return void 0;
+  }
+  if (n === undefined) n = 1;
+  if (n <= 0) return [];
+  if (n === 1) return array[0];
+  return array.slice(0, n);
+};
+
+_.last = function(array) {
+  return array[array.length - 1];
+};
+
+//*********Arrays module ends*********//
