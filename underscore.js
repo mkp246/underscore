@@ -619,6 +619,10 @@ _.partition = function(obj, cb, context) {
 _.isTrue = function(val) {
   return Boolean(val);
 };
+_.isFalse = function(val) {
+  return !Boolean(val);
+};
+
 _.reduce = function(obj, callback, init, context) {
   if (this.obj !== undefined) {
     init = callback;
@@ -786,8 +790,98 @@ _.first = function(array, n) {
   return array.slice(0, n);
 };
 
-_.last = function(array) {
-  return array[array.length - 1];
+_.head = _.first;
+_.take = _.first;
+
+_.rest = function(array, n) {
+  [array, n] = fixOOArgs(this, arguments);
+  array = _.toArray(array);
+  if (n === 0) return array;
+  n = n || 1;
+  return array.slice(n);
+};
+
+_.tail = _.rest;
+_.drop = _.rest;
+
+_.initial = function(array, n) {
+  [array, n] = fixOOArgs(this, arguments);
+  array = _.toArray(array);
+  n = n || 1;
+  var sliceEnd = array.length < n ? 0 : array.length - n;
+  return array.slice(0, sliceEnd);
+};
+
+_.last = function(array, n) {
+  [array, n] = fixOOArgs(this, arguments);
+  if (array === undefined || array === null || array.length === 0) {
+    return void 0;
+  }
+  array = _.toArray(array);
+  if (n <= 0) return [];
+  n = n || 1;
+  if (n === 1) return array[array.length - 1];
+  if (array.length < n) return array;
+  return array.slice(array.length - n);
+};
+
+_.compact = function(array) {
+  [array] = fixOOArgs(this, arguments);
+  array = _.toArray(array);
+  return _.reject(array, _.isFalse);
+};
+
+function pushArray(result, val) {
+  _.each(val, function(val1) {
+    result.push(val1);
+  });
+}
+
+_.flatten = function(array, shallow) {
+  if (shallow === undefined) shallow = false;
+  var result = [];
+  _.each(array, function(val) {
+    if (!_.isArray(val)) result.push(val);
+    else if (shallow) pushArray(result, val);
+    else {
+      var res = _.flatten(val, false);
+      pushArray(result, res);
+    }
+  });
+  return result;
+};
+
+_.without = function(array, ...values) {
+  if (typeof array.callee === 'function') array = _.toArray(array);
+  var newArray = array.concat();
+  _.each(values, function(value) {
+    while (true) {
+      var idx = newArray.indexOf(value);
+      if (idx === -1) break;
+      newArray.splice(idx, 1);
+    }
+  });
+  return newArray;
+};
+
+_.sortedIndex = function(array, value, pred, context) {
+  let predicate = pred;
+  if (predicate === undefined) predicate = _.identity;
+  if (typeof predicate === 'string') predicate = function(val) {
+    return val[pred];
+  };
+  let toSearch = predicate.bind(context)(value);
+  for (let i = 0, length = array.length; i < length; i++) {
+    let currentResult = predicate.bind(context)(array[i]);
+    if (toSearch <= currentResult) {
+      return i;
+    }
+  }
+  return array.length;
+};
+
+_.uniq = function(array) {
+  
 };
 
 //*********Arrays module ends*********//
