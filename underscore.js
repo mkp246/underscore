@@ -29,29 +29,6 @@ _.constant = function(val) {
   };
 };
 
-_.size = function(obj) {
-  return Object.keys(obj).length;
-};
-
-_.toArray = function(obj) {
-  var arr = [];
-  Object.keys(obj).forEach(function(key) {
-    arr.push(obj[key]);
-  });
-  return arr;
-};
-
-_.shuffle = _.toArray;
-
-_.sample = function(arr, len) {
-  len = len || 1;
-  if (len === 1) {
-    return _.toArray(arr)[0];
-  } else {
-    return Array.prototype.slice.call(_.toArray(arr), 0, len + 1);
-  }
-};
-
 _.map = function(obj, callback, context) {
   if (this.obj !== undefined) {
     callback = obj;
@@ -74,8 +51,9 @@ _.map = function(obj, callback, context) {
     return result;
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+      result.push(callback(obj[key], key));
     });
+    return result;
   }
 };
 
@@ -507,31 +485,101 @@ _.groupBy = function(obj, pred, context) {
   return result;
 };
 
-_.countBy = function(obj, callback) {
+_.indexBy = function(obj, pred, context) {
+  var result = {};
+  var predicate = pred;
+  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
+    return val[pred];
+  };
+  if (predicate === undefined) predicate = _.identity;
+  if (Array.isArray(predicate)) {
+    predicate = function(val) {
+      _.each(pred, function(key) {
+        val = val[key];
+      });
+      return val;
+    };
+  }
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
+      var group = predicate.bind(context)(obj[i], i, obj);
+      result[group] = obj[i];
     }
   } else {
     Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
+      predicate.bind(context)(obj[key], key);
     });
   }
+  return result;
+};
+
+_.countBy = function(obj, pred, context) {
+  var result = {};
+  var predicate = pred;
+  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
+    return val[pred];
+  };
+  if (predicate === undefined) predicate = _.identity;
+  if (Array.isArray(predicate)) {
+    predicate = function(val) {
+      _.each(pred, function(key) {
+        val = val[key];
+      });
+      return val;
+    };
+  }
+  if (Array.isArray(obj)) {
+    for (var i = 0, length = obj.length; i < length; i++) {
+      var group = predicate.bind(context)(obj[i], i, obj);
+      if (typeof result[group] !== 'number') result[group] = 0;
+      result[group]++;
+    }
+  } else {
+    Object.keys(obj).forEach(function(key) {
+      predicate.bind(context)(obj[key], key);
+    });
+  }
+  return result;
+};
+
+_.shuffle = function(list) {
+  if (!Array.isArray(list)) {
+    return _.shuffle(Object.values(list));
+  } else {
+    var newList = list.concat();
+    var tmp = newList[list.length - 1];
+    newList[list.length - 1] = newList[0];
+    newList[0] = tmp;
+    return newList;
+  }
+};
+
+_.sample = function(arr, len) {
+  len = len || 1;
+  if (len < 1) return [];
+  if (len === 1) {
+    return _.toArray(arr)[0];
+  } else {
+    return Array.prototype.slice.call(_.toArray(arr), 0, len + 1);
+  }
+};
+
+_.isArray = function(array) {
+  return Array.isArray(array);
+};
+
+_.toArray = function(obj) {
+  if (obj.constructor.toString().split(' ')[1] === 'Object()') obj = Object.values(obj);
+  return Array.from(obj);
+};
+
+_.size = function(obj) {
+  if (obj === undefined || obj === null || typeof obj === 'number') return 0;
+  if (obj.length === Object.keys(obj).length - 1) return obj.length;
+  return Object.keys(obj).length;
 };
 
 _.partition = function(obj, callback) {
-  if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
-    }
-  } else {
-    Object.keys(obj).forEach(function(key) {
-      callback(obj[key], key);
-    });
-  }
-};
-
-_.indexBy = function(obj, callback) {
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       callback(obj[i], i, obj);
