@@ -1045,3 +1045,17 @@ _.chunk = function(array, size) {
 };
 
 //*********Arrays module ends*********//
+//*********Functions module starts*********//
+
+_.bind = function(fun, context, ...extraArgs) {
+  [fun, context] = fixOOArgs(this, arguments);
+  if (typeof fun !== 'function') {
+    throw new TypeError();
+  }
+  let result = function(...someMoreArgs) {
+    return fun.call(this, ...extraArgs, ...someMoreArgs);
+  }.bind(context);
+  return result;
+};
+
+//*********Functions module ends*********//
