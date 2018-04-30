@@ -91,7 +91,10 @@ _.find = function(array, predicate) {
   }
 };
 
-_.findIndex = function(obj, predicate, context) {
+_.findIndex = function(obj, pred, context) {
+  if (obj === undefined || obj === null) return -1;
+  let predicate = pred;
+  if (typeof predicate === 'string') predicate = val => _.isTrue(val[pred]);
   if (Array.isArray(obj)) {
     return obj.findIndex(predicate.bind(context));
   } else {
@@ -379,9 +382,14 @@ _.range = function(start, stop, step) {
   if (arguments.length == 1) {
     stop = arguments[0];
     start = 0;
-    step = 1;
+    if (stop < 0) {
+      step = -1;
+    } else {
+      step = 1;
+    }
   } else if (arguments.length == 2) {
     step = 1;
+    if (start > stop) step = -1;
   }
 
   function comp(v1, v2) {
@@ -709,6 +717,7 @@ _.keys = function(obj) {
 };
 
 _.findLastIndex = function(obj, callback, context) {
+  if (obj === undefined || obj === null) return -1;
   if (Array.isArray(obj)) {
     let result = _.findIndex(obj.slice().reverse(), callback, context);
     return (result === -1) ? -1 : obj.length - 1 - result;
@@ -1023,6 +1032,16 @@ _.lastIndexOf = function(array, val, fromIndex) {
     return _.findLastIndex(array, value => isNaN(value));
   }
   return Array.prototype.lastIndexOf.call(array, val, fromIndex);
+};
+
+_.chunk = function(array, size) {
+  if (size === undefined || array.length === 0 || size <= 0) return [];
+  let result = [];
+  let newArray = array.concat();
+  while (newArray.length > 0) {
+    result.push(newArray.splice(0, size));
+  }
+  return result;
 };
 
 //*********Arrays module ends*********//
