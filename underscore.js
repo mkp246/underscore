@@ -708,11 +708,10 @@ _.keys = function(obj) {
   return Object.keys(obj);
 };
 
-_.findLastIndex = function(obj, callback) {
+_.findLastIndex = function(obj, callback, context) {
   if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      callback(obj[i], i, obj);
-    }
+    let result = _.findIndex(obj.slice().reverse(), callback, context);
+    return (result === -1) ? -1 : obj.length - 1 - result;
   } else {
     Object.keys(obj).forEach(function(key) {
       callback(obj[key], key);
@@ -1005,9 +1004,25 @@ _.indexOf = function(array, val, fromIndex) {
   if (typeof  array.callee === 'function') array = _.toArray(array);
   if (typeof  fromIndex === 'boolean') fromIndex = undefined;
   if (isNaN(val)) {
-    return _.findIndex(array, val => isNaN(val));
+    return _.findIndex(array, value => isNaN(value));
   }
   return array.indexOf(val, fromIndex);
+};
+
+_.lastIndexOf = function(array, val, fromIndex) {
+  if (!Boolean(array) || array.length === 0) return -1;
+  if (typeof  array.callee === 'function') array = _.toArray(array);
+  if (fromIndex === undefined || typeof  fromIndex === 'boolean') {
+    fromIndex = -1;
+  }
+  if (!Boolean(fromIndex) && !(fromIndex === 0) && !isNaN(fromIndex)) {
+    fromIndex = -1;
+  }
+  if (typeof fromIndex !== 'number') fromIndex = -1;
+  if (val !== undefined && isNaN(val)) {
+    return _.findLastIndex(array, value => isNaN(value));
+  }
+  return Array.prototype.lastIndexOf.call(array, val, fromIndex);
 };
 
 //*********Arrays module ends*********//

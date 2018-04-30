@@ -434,8 +434,8 @@
     assert.strictEqual(_.lastIndexOf([1, 2, NaN, NaN], NaN), 3, 'Expected [1, 2, NaN] to contain NaN');
     assert.strictEqual(_.lastIndexOf([1, 2, Infinity], NaN), -1, 'Expected [1, 2, NaN] to contain NaN');
 
-    assert.strictEqual(_.lastIndexOf([1, 2, NaN, NaN], NaN, 2), 2, 'fromIndex does not affect result');
-    assert.strictEqual(_.lastIndexOf([1, 2, NaN, NaN], NaN, -2), 2, 'fromIndex does not affect result');
+    assert.strictEqual(_.lastIndexOf([1, 2, NaN, NaN], NaN, 2), 3, 'fromIndex does not affect result');
+    assert.strictEqual(_.lastIndexOf([1, 2, NaN, NaN], NaN, -2), 3, 'fromIndex does not affect result');
 
     (function() {
       assert.strictEqual(_.lastIndexOf(arguments, NaN), 3, 'Expected arguments [1, 2, NaN] to contain NaN');
