@@ -338,6 +338,9 @@ _.findWhere = function(list, props) {
 _.isUndefined = function(val) {
   return typeof val === 'undefined';
 };
+_.isNull = function(val) {
+  return val === null;
+};
 
 _.max = function(obj, cb, context) {
   var callback = cb;
@@ -880,8 +883,131 @@ _.sortedIndex = function(array, value, pred, context) {
   return array.length;
 };
 
-_.uniq = function(array) {
-  
+_.uniq = function(array, isSorted, pred, context) {
+  if (typeof isSorted !== 'boolean') {
+    context = pred;
+    pred = isSorted;
+    isSorted = false;
+  }
+  let predicate = pred;
+  if (predicate === undefined) predicate = _.identity;
+  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
+    return val[pred];
+  };
+  let mappedArray = _.map(array, predicate.bind(context));
+  let newArray = [];
+  _.each(mappedArray, function(val, index) {
+    if (mappedArray.indexOf(val) === index) newArray.push(array[index]);
+  });
+  return newArray;
+};
+
+_.unique = _.uniq;
+
+_.intersection = function(arrays) {
+  let args = _.toArray(arguments);
+  if (args[0] !== null && typeof args[0].callee === 'function') args[0] = _.toArray(args[0]);
+  if (this.obj !== undefined) args = [this.obj, ...args];
+  if (_.some(args, function(val) {
+    return val === null;
+  })) return [];
+  var intersection = [];
+  _.each(args[0], function(val) {
+    var foundInAll = args.every(function(otherArray) {
+      return otherArray.indexOf(val) !== -1;
+    });
+    if (foundInAll) intersection.push(val);
+  });
+  return _.uniq(intersection);
+};
+
+_.union = function(arrays) {
+  let args = _.toArray(arguments);
+  if (args[0] !== null && typeof args[0].callee === 'function') args[0] = _.toArray(args[0]);
+  if (this.obj !== undefined) args = [this.obj, ...args];
+  let union = [];
+  _.each(args, function(array) {
+    _.each(array, function(val) {
+      if (union.indexOf(val) === -1) union.push(val);
+    });
+  });
+  return union;
+};
+
+_.difference = function(array, ...others) {
+  if (this.obj !== undefined) {
+    others = [array, ...others];
+    array = this.obj;
+  }
+  if (array !== null && typeof array.callee === 'function') array = _.toArray(array);
+  let result = [];
+  _.each(array, function(val) {
+    if (!_.any(others, function(other) {
+      return _.isArray(other) ? other.indexOf(val) !== -1 : false;
+    })) {
+      result.push(val);
+    }
+  });
+  return result;
+};
+
+_.zip = function(...arrays) {
+  let result = [];
+  if (arrays === undefined || arrays.length === 0 || _.any(arrays, _.isNull)) return [];
+  let maxArrayLength = _.max(arrays, 'length').length;
+  for (let i = 0; i < maxArrayLength; i++) {
+    let tempArray = [];
+    _.each(arrays, function(array) {
+      tempArray.push(array[i]);
+    });
+    result.push(tempArray);
+  }
+  return result;
+};
+
+_.unzip = function(arrays) {
+  let result = [];
+  if (arrays === undefined || _.isNull(arrays) || arrays.length === 0) return [];
+  for (let i = 0, length = arrays[0].length; i < length; i++) {
+    let tempArray = [];
+    _.each(arrays, function(array) {
+      tempArray.push(array[i]);
+    });
+    result.push(tempArray);
+  }
+  return result;
+};
+
+_.object = function(list, values) {
+  var result = {};
+  if (values === undefined) {
+    _.each(list, function(pair) {
+      result[pair[0]] = pair[1];
+    });
+  } else {
+    for (let i = 0, length = list.length; i < length; i++) {
+      result[list[i]] = values[i];
+    }
+  }
+  return result;
+};
+
+_.pairs = function(obj) {
+  let result = [];
+  _.each(obj, function(val, key) {
+    result.push([key, val]);
+  });
+  return result;
+};
+
+_.indexOf = function(array, val, fromIndex) {
+  if (!Boolean(array) || array.length === 0) return -1;
+  if (typeof  array.callee === 'function') array = _.toArray(array);
+  if (typeof  fromIndex === 'boolean') fromIndex = undefined;
+  if (isNaN(val)) {
+    return _.findIndex(array, val => isNaN(val));
+  }
+  return array.indexOf(val, fromIndex);
 };
 
 //*********Arrays module ends*********//
