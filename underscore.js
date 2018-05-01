@@ -301,12 +301,6 @@ _.invoke = function(list, method, ...args) {
   return result;
 };
 
-_.partial = function(func, ...args) {
-  return function(...someMoreArgs) {
-    return func(...args, ...someMoreArgs);
-  };
-};
-
 _.pluck = function(array, key) {
   var result = [];
   _.each(array, function(element) {
@@ -1056,6 +1050,64 @@ _.bind = function(fun, context, ...extraArgs) {
     return fun.call(this, ...extraArgs, ...someMoreArgs);
   }.bind(context);
   return result;
+};
+
+_.partial = function(func, ...args) {
+  return function(...someMoreArgs) {
+    let argsTemp = args.concat();
+    let ph = _.partial.placeholder || _;
+    while (argsTemp.indexOf(ph) !== -1) {
+      argsTemp[argsTemp.indexOf(ph)] = someMoreArgs.splice(0, 1)[0];
+    }
+    let result = func.bind(this)(...argsTemp, ...someMoreArgs);
+    return result;
+  };
+};
+
+_.bindAll = function(obj, ...methods) {
+  if (methods.length === 0) throw  new Error();
+  _.each(methods, function(method) {
+    obj[method] = obj[method].bind(obj);
+  });
+};
+
+_.memoize = function(func, hashFunction) {
+  if (hashFunction === undefined) hashFunction = _.identity;
+  let result = function(...args) {
+    result.cache = result.cache || {};
+    let hash = hashFunction(...args);
+    if (!_.hasOwnProperty(result.cache, hash)) {
+      let currentResult = func(...args);
+      result.cache[hash] = currentResult;
+    }
+    return result.cache[hash];
+  };
+  return result;
+};
+
+_.delay = function(func, delay, ...args) {
+  setTimeout(() => func(...args), delay);
+};
+
+_.defer = function(func, ...args) {
+  setTimeout(() => func(...args), 0);
+};
+
+_.throttle = function(func, wait, ...opts) {
+  let waiting = false;
+  let pending = 0;
+  let lastResult;
+  return function xx(...args) {
+    if (!waiting) {
+      waiting = true;
+      setTimeout(() => waiting = false, wait);
+      pending = Math.max(0, pending - 1);
+      lastResult = func(...args);
+    } else {
+      _.delay(xx, wait * (++pending), ...args);
+    }
+    return lastResult;
+  };
 };
 
 //*********Functions module ends*********//
