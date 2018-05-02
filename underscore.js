@@ -19,8 +19,10 @@ _.each = function(array, callback, context) {
   return array;
 };
 
-_.times = function() {
-
+_.times = function(count, callback, context) {
+  while (count--) {
+    callback.bind(context)();
+  }
 };
 
 _.forEach = _.each;
@@ -1093,20 +1095,140 @@ _.defer = function(func, ...args) {
   setTimeout(() => func(...args), 0);
 };
 
-_.throttle = function(func, wait, ...opts) {
-  let waiting = false;
+_.throttle = function(func, wait, opts) {
   let pending = 0;
   let lastResult;
-  return function xx(...args) {
-    if (!waiting) {
-      waiting = true;
-      setTimeout(() => waiting = false, wait);
+  let leading = true;
+  let trailing = true;
+  if (opts !== undefined && opts.leading !== undefined) leading = opts.leading;
+  if (opts !== undefined && opts.trailing !== undefined) trailing = opts.trailing;
+  let argx;
+  let initDone = false;
+
+  function handler() {
+    if (pending !== 0) {
+      clearInterval(intervalChecker);
+      lastResult = func(...argx);
       pending = Math.max(0, pending - 1);
-      lastResult = func(...args);
     } else {
-      _.delay(xx, wait * (++pending), ...args);
+      clearInterval(interval);
+      intervalChecker = setInterval(() => {
+        if (pending !== 0) {
+          lastResult = func(...argx);
+          pending--;
+          interval = setInterval(handler, wait);
+        }
+      }, 5);
+    }
+  };
+  let interval = undefined;
+  let intervalChecker = undefined;
+  return function xx(...args) {
+    argx = args;
+    if (!initDone && leading) {
+      lastResult = func(...argx);
+      initDone = true;
+      interval = setInterval(handler, wait);
+    } else {
+      pending++;
     }
     return lastResult;
+  };
+};
+
+_.debounce = function(func, wait, immediate) {
+  let lastRun = 0;
+  immediate = immediate || false;
+  let lastResult;
+  let cancel = false;
+
+  function f() {
+    if (cancel) return lastResult;
+    if (immediate) {
+      lastRun = new Date();
+      immediate = false;
+      lastResult = func();
+    } else {
+      if (new Date() - lastRun > wait) {
+        lastRun = new Date();
+        lastResult = func();
+      }
+    }
+    return lastResult;
+  }
+
+  f.cancel = function() {
+    cancel = true;
+  };
+  return f;
+};
+
+_.once = function(func) {
+  let done = false;
+  let result;
+  return function() {
+    if (!done) {
+      done = true;
+      result = func();
+    }
+    return result;
+  };
+};
+
+_.wrap = function(func, wrapper) {
+  return function(...args) {
+    return wrapper.bind(this)(func, ...args);
+  };
+};
+
+_.negate = function(predicate) {
+  return function(...args) {
+    return !predicate(...args);
+  };
+};
+
+_.compose = function(...functions) {
+  return function(...args) {
+    let maxIdx = functions.length - 1;
+    var result = functions[maxIdx](...args);
+    for (let i = maxIdx - 1; i >= 0; i--) {
+      result = functions[i](result);
+    }
+    return result;
+  };
+};
+
+_.after = function(count, func) {
+  let currentCount = 0;
+  return function() {
+    if (currentCount < count) currentCount++;
+    if (currentCount === count) {
+      currentCount = 0;
+      return func();
+    }
+  };
+};
+
+_.before = function(count, func) {
+  let currentCount = 0;
+  let result;
+  return function() {
+    currentCount++;
+    if (currentCount < count) {
+      result = func.bind(this)();
+    } else {
+      return result;
+    }
+  };
+};
+
+_.iteratee = function(value, context) {
+  if (value === undefined) return _.identity;
+  else if (typeof value === 'function') return value;
+  else if (_.isArray(value)) return obj => {
+    let result = obj;
+    _.each(value, key => result = result[key]);
+    return result;
   };
 };
 
