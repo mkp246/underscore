@@ -1116,4 +1116,15 @@ _.isRegExp = function(val) {
   return val.constructor.toString().startsWith('function RegExp()');
 };
 
+_.restArgs = function(func, startIndex) {
+  return function(...args) {
+    let newArgs = [];
+    if (startIndex === undefined) startIndex = func.length;
+    for (let i = 1; i < startIndex; i++) {
+      newArgs.push(args.splice(0, 1)[0]);
+    }
+    newArgs.push(args);
+    return func.bind(this)(...newArgs);
+  };
+};
 //*********Functions module ends*********//
