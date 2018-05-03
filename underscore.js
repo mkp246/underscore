@@ -32,20 +32,11 @@ _.constant = function(val) {
   };
 };
 
-_.map = function(obj, callback, context) {
-  if (this.obj !== undefined) {
-    callback = obj;
-    context = callback;
-    obj = this.obj;
-  }
+_.map = function(obj, cb, context) {
+  [obj, cb, context] = fixOOArgs(this, arguments);
   if (obj === null) return [];
   var result = [];
-  if (typeof callback === 'string') {
-    _.each(obj, function(val) {
-      result.push(val[callback]);
-    });
-    return result;
-  }
+  let callback = _.iteratee(cb);
   //array like objects {length :2, 0:'hello', 1:'world'}
   if (obj.length === Object.keys(obj).length - 1 || Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
@@ -62,7 +53,8 @@ _.map = function(obj, callback, context) {
 
 _.collect = _.map;
 
-_.find = function(array, predicate) {
+_.find = function(array, pred) {
+  let predicate = _.iteratee(pred);
   if (predicate === undefined) {
     _.each(array, predicate);
     return array.length;
@@ -95,7 +87,7 @@ _.find = function(array, predicate) {
 
 _.findIndex = function(obj, pred, context) {
   if (obj === undefined || obj === null) return -1;
-  let predicate = pred;
+  let predicate = _.iteratee(pred);
   if (typeof predicate === 'string') predicate = val => _.isTrue(val[pred]);
   if (Array.isArray(obj)) {
     return obj.findIndex(predicate.bind(context));
@@ -108,24 +100,8 @@ _.findIndex = function(obj, pred, context) {
 
 _.detect = _.find;
 
-_.filter = function(obj, predicate, context) {
-  if (this.obj !== undefined) {
-    context = predicate;
-    predicate = obj;
-    obj = this.obj;
-  }
-  if (typeof predicate === 'string') {
-    return _.filter(obj, function(val) {
-      return Boolean(val[predicate]);
-    });
-  }
-  if (typeof predicate === 'object') {
-    return obj.filter(function(val) {
-      return Object.keys(predicate).every(function(value) {
-        return predicate[value] === val[value];
-      });
-    });
-  }
+_.filter = function(obj, pred, context) {
+  let predicate = _.iteratee(pred);
   var result = [];
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
@@ -142,22 +118,11 @@ _.filter = function(obj, predicate, context) {
 
 _.select = _.filter;
 
-_.reject = function(obj, predicate, context) {
-  var result = [];
-  if (typeof predicate === 'string') {
-    return obj.filter(function(val) {
-      return val[predicate] === undefined;
-    });
-  }
-  if (typeof predicate === 'object') {
-    return obj.filter(function(val) {
-      return Object.keys(predicate).some(function(value) {
-        return predicate[value] !== val[value];
-      });
-    });
-  }
+_.reject = function(obj, pred, context) {
+  let result = [];
+  let predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
+    for (let i = 0, length = obj.length; i < length; i++) {
       if (!predicate.bind(context)(obj[i], i, obj)) result.push(obj[i]);
     }
     return result;
@@ -171,19 +136,8 @@ _.reject = function(obj, predicate, context) {
 _.identity = function(input) {
   return input;
 };
-_.every = function(obj, predicate, context) {
-  if (typeof predicate === 'string') {
-    return obj.every(function(value) {
-      return Boolean(value[predicate]);
-    });
-  }
-  if (typeof predicate === 'object') {
-    return obj.every(function(value) {
-      return Object.keys(predicate).every(function(key) {
-        return value[key] === predicate[key];
-      });
-    });
-  }
+_.every = function(obj, pred, context) {
+  let predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       if (!predicate.bind(context)(obj[i], i, obj)) return false;
@@ -215,22 +169,17 @@ _.hasOwnProperty = function(object, key) {
 
 _.all = _.every;
 
-_.some = function(obj, predicate, context) {
-  if (typeof predicate === 'string') {
-    return obj.every(function(value) {
-      return Boolean(value[predicate]);
-    });
-  }
-  if (predicate === undefined) predicate = _.identity;
-  if (typeof predicate === 'object') {
+_.some = function(obj, pred, context) {
+  if (typeof pred === 'object') {
     return obj.some(function(value) {
-      return Object.keys(predicate).every(function(key) {
-        return value[key] === predicate[key];
+      return Object.keys(pred).every(function(key) {
+        return value[key] === pred[key];
       });
     });
   }
+  let predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
-    for (var i = 0, length = obj.length; i < length; i++) {
+    for (let i = 0, length = obj.length; i < length; i++) {
       if (predicate.bind(context)(obj[i], i, obj)) return true;
     }
     return false;
@@ -342,21 +291,14 @@ _.isNull = function(val) {
 };
 
 _.max = function(obj, cb, context) {
-  var callback = cb;
   if (!Boolean(obj)) return -Infinity;
-  if (typeof callback === 'string') callback = function(o) {
-    return o[cb];
-  };
-  if (callback === 0 && typeof obj[0] === 'object') callback = function(o) {
-    return o[cb];
-  };
-  if (typeof callback !== 'function') callback = _.identity;
-  var max = -Infinity;
-  var maxObj = -Infinity;
+  let callback = _.iteratee(cb);
+  let max = -Infinity;
+  let maxObj = -Infinity;
   if (Object.keys(obj).length === 0) return -Infinity;
   if (Array.isArray(obj)) {
     _.each(obj, function(val, idx) {
-      var cbResult = callback.bind(context)(val, idx, obj);
+      let cbResult = callback.bind(context)(val, idx, obj);
       if (cbResult >= max) {
         max = cbResult;
         maxObj = val;
@@ -400,17 +342,10 @@ _.range = function(start, stop, step) {
 };
 
 _.min = function(obj, cb, context) {
-  var callback = cb;
   if (!Boolean(obj)) return Infinity;
-  if (typeof callback === 'string') callback = function(o) {
-    return o[cb];
-  };
-  if (callback === 0 && typeof obj[0] === 'object') callback = function(o) {
-    return o[cb];
-  };
-  if (typeof callback !== 'function') callback = _.identity;
-  var min = Infinity;
-  var minObj = Infinity;
+  let callback = _.iteratee(cb);
+  let min = Infinity;
+  let minObj = Infinity;
   if (Object.keys(obj).length === 0) return Infinity;
   if (Array.isArray(obj)) {
     _.each(obj, function(val, idx) {
@@ -432,19 +367,13 @@ _.min = function(obj, cb, context) {
   return minObj;
 };
 
-_.sortBy = function(array, predicate) {
-  if (predicate === undefined) predicate = _.identity;
-  var newPredicate = predicate;
-  if (typeof  predicate === 'string') {
-    newPredicate = function(val) {
-      return val[predicate];
-    };
-  }
+_.sortBy = function(array, pred) {
+  let predicate = _.iteratee(pred);
   if (!Array.isArray(array)) array = Object.values(array);
   return array.sort(function(val1, val2) {
-    var cmp1 = newPredicate(val1);
-    var cmp2 = newPredicate(val2);
-    var cmpResult;
+    let cmp1 = predicate(val1);
+    let cmp2 = predicate(val2);
+    let cmpResult;
     if (cmp1 === undefined && cmp2 === undefined) {
       cmpResult = 0;
     } else if (cmp1 === undefined) {
@@ -473,20 +402,9 @@ _.object = function(list, values) {
 };
 
 _.groupBy = function(obj, pred, context) {
-  var result = {};
-  var predicate = pred;
-  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
-    return val[pred];
-  };
+  let result = {};
+  let predicate = _.iteratee(pred);
   if (predicate === undefined) predicate = _.identity;
-  if (Array.isArray(predicate)) {
-    predicate = function(val) {
-      _.each(pred, function(key) {
-        val = val[key];
-      });
-      return val;
-    };
-  }
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       var group = predicate.bind(context)(obj[i], i, obj);
@@ -503,19 +421,7 @@ _.groupBy = function(obj, pred, context) {
 
 _.indexBy = function(obj, pred, context) {
   var result = {};
-  var predicate = pred;
-  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
-    return val[pred];
-  };
-  if (predicate === undefined) predicate = _.identity;
-  if (Array.isArray(predicate)) {
-    predicate = function(val) {
-      _.each(pred, function(key) {
-        val = val[key];
-      });
-      return val;
-    };
-  }
+  var predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       var group = predicate.bind(context)(obj[i], i, obj);
@@ -531,19 +437,7 @@ _.indexBy = function(obj, pred, context) {
 
 _.countBy = function(obj, pred, context) {
   var result = {};
-  var predicate = pred;
-  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
-    return val[pred];
-  };
-  if (predicate === undefined) predicate = _.identity;
-  if (Array.isArray(predicate)) {
-    predicate = function(val) {
-      _.each(pred, function(key) {
-        val = val[key];
-      });
-      return val;
-    };
-  }
+  let predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       var group = predicate.bind(context)(obj[i], i, obj);
@@ -596,17 +490,9 @@ _.size = function(obj) {
 };
 
 _.partition = function(obj, cb, context) {
-  var callback = cb;
-  var result = [[], []];
-  callback = callback || _.isTrue;
-  if (typeof callback === 'string') callback = function(val) {
-    return _.isTrue(val[cb]);
-  };
-  if (typeof callback == 'object') callback = function(val) {
-    return Object.keys(cb).every(function(key) {
-      return val[key] === cb[key];
-    });
-  };
+  let result = [[], []];
+  cb = cb || _.isTrue;
+  let callback = _.iteratee(cb);
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
       var cbResult = callback.bind(context)(obj[i], i, obj);
@@ -724,26 +610,27 @@ _.findLastIndex = function(obj, callback, context) {
   }
 };
 
-_.mapObject = function(obj, callback, init) {
-  var current = init || 0;
-  callback = callback || function(memo, num) {
-    return memo + num;
-  };
-  _.each(obj, function(val, idx, arr) {
-    callback(current, val, idx, arr);
+_.mapObject = function(obj, cb, init) {
+  [obj, cb, init] = fixOOArgs(this, arguments);
+  if (obj === null) return [];
+  let callback = _.iteratee(cb);
+  let result = {};
+  _.each(obj, function(val, key, obj) {
+    result[key] = callback(val, key, obj);
   });
-  return current;
+  return result;
 };
 
-_.findKey = function(obj, callback, init) {
+_.findKey = function(obj, cb, init) {
   var current = init || 0;
+  let callback = _.iteratee(cb);
   callback = callback || function(memo, num) {
     return memo + num;
   };
-  _.each(obj, function(val, idx, arr) {
-    callback(current, val, idx, arr);
-  });
-  return current;
+
+  for (let i = current, length = obj.length; i < length; i++) {
+    if (callback(obj[i], i, obj)) return i.toString();
+  }
 };
 
 _.pick = function(obj, callback, init) {
@@ -872,11 +759,7 @@ _.without = function(array, ...values) {
 };
 
 _.sortedIndex = function(array, value, pred, context) {
-  let predicate = pred;
-  if (predicate === undefined) predicate = _.identity;
-  if (typeof predicate === 'string') predicate = function(val) {
-    return val[pred];
-  };
+  let predicate = _.iteratee(pred);
   let toSearch = predicate.bind(context)(value);
   for (let i = 0, length = array.length; i < length; i++) {
     let currentResult = predicate.bind(context)(array[i]);
@@ -893,12 +776,8 @@ _.uniq = function(array, isSorted, pred, context) {
     pred = isSorted;
     isSorted = false;
   }
-  let predicate = pred;
-  if (predicate === undefined) predicate = _.identity;
-  if (typeof predicate === 'string' || typeof predicate === 'number') predicate = function(val) {
-    return val[pred];
-  };
-  let mappedArray = _.map(array, predicate.bind(context));
+  let predicate = _.iteratee(pred);
+  let mappedArray = _.map(array, predicate, context);
   let newArray = [];
   _.each(mappedArray, function(val, index) {
     if (mappedArray.indexOf(val) === index) newArray.push(array[index]);
@@ -1230,6 +1109,11 @@ _.iteratee = function(value, context) {
     _.each(value, key => result = result[key]);
     return result;
   };
+  else if (typeof value === 'number' || typeof value === 'string') return obj => obj[value];
+};
+
+_.isRegExp = function(val) {
+  return val.constructor.toString().startsWith('function RegExp()');
 };
 
 //*********Functions module ends*********//
