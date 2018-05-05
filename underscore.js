@@ -594,10 +594,6 @@ _.reduceRight = function(obj, callback, init, context) {
 
 _.foldr = _.reduceRight;
 
-_.keys = function(obj) {
-  return Object.keys(obj);
-};
-
 _.findLastIndex = function(obj, callback, context) {
   if (obj === undefined || obj === null) return -1;
   if (Array.isArray(obj)) {
@@ -633,27 +629,45 @@ _.findKey = function(obj, cb, init) {
   }
 };
 
-_.pick = function(obj, callback, init) {
-  var current = init || 0;
-  callback = callback || function(memo, num) {
-    return memo + num;
-  };
-  _.each(obj, function(val, idx, arr) {
-    callback(current, val, idx, arr);
-  });
-  return current;
+_.pick = function(obj, ...cb) {
+  let result = {};
+  if (_.isUndefined(obj) || _.isNull(obj)) return result;
+  cb = _.flatten(cb);
+  let context, callback;
+  if (typeof cb[0] === 'function') {
+    context = cb[1];
+    callback = _.iteratee(cb[0]);
+    _.each(obj, function(val, key) {
+      if (callback.call(context, val, key, obj)) result[key] = val;
+    });
+  } else {
+    _.each(cb, function(key) {
+      let val = obj[key];
+      if (val !== undefined) result[key] = val;
+    });
+  }
+  return result;
 };
 
-_.omit = function(obj, callback, init) {
-  var current = init || 0;
-  callback = callback || function(memo, num) {
-    return memo + num;
-  };
-  _.each(obj, function(val, idx, arr) {
-    callback(current, val, idx, arr);
-  });
-  return current;
+_.has = _.hasOwnProperty;
 
+_.omit = function(obj, ...cb) {
+  let result = _.extend({}, obj);
+  if (_.isUndefined(obj) || _.isNull(obj)) return result;
+  cb = _.flatten(cb);
+  let context, callback;
+  if (typeof cb[0] === 'function') {
+    context = cb[1];
+    callback = _.iteratee(cb[0]);
+    _.each(obj, function(val, key) {
+      if (callback.call(context, val, key, obj)) delete result[key];
+    });
+  } else {
+    _.each(cb, function(key) {
+      delete result[key];
+    });
+  }
+  return result;
 };
 
 _.isElement = function(node) {
@@ -1127,4 +1141,135 @@ _.restArgs = function(func, startIndex) {
     return func.bind(this)(...newArgs);
   };
 };
+
 //*********Functions module ends*********//
+//*********Objects module starts*********//
+
+_.keys = function(obj) {
+  let type = typeof obj;
+  if (obj === null || type === 'undefined' || type === 'boolean' || type === 'string' || type === 'number') return [];
+  return Object.keys(obj);
+};
+
+_.allKeys = function(obj) {
+  let type = typeof obj;
+  if (obj === null || type === 'undefined' || type === 'boolean' || type === 'string' || type === 'number') return [];
+  let result = [];
+  let tmpObj = obj;
+  while (tmpObj !== null) {
+    result.push(...Object.keys(tmpObj));
+    tmpObj = tmpObj.__proto__;
+  }
+  return result;
+};
+
+_.values = function(obj) {
+  return Object.values(obj);
+};
+
+_.invert = function(obj) {
+  let result = {};
+  _.each(_.pairs(obj), function(keyVal) {
+    result[keyVal[1]] = keyVal[0];
+  });
+  return result;
+};
+
+_.functions = function(obj) {
+  return _.filter(_.allKeys(obj), function(key) {
+    return typeof obj[key] === 'function';
+  });
+};
+
+_.methods = _.functions;
+
+_.extend = function(destination, ...sources) {
+  if (_.isNull(destination) || _.isUndefined(destination)) return destination;
+  _.each(sources, function(source) {
+    _.each(_.allKeys(source), function(key) {
+      destination[key] = source[key];
+    });
+  });
+  return destination;
+};
+
+_.extendOwn = function(destination, ...sources) {
+  if (_.isNull(destination) || _.isUndefined(destination)) return destination;
+  Object.assign(destination, ...sources);
+  return destination;
+};
+
+_.assign = _.extendOwn;
+
+_.defaults = function(obj, ...defaults) {
+  if (_.isUndefined(obj) || _.isNull(obj)) obj = defaults.splice(0, 1)[0];
+  _.each(defaults, function(def) {
+    _.each(def, function(val, key) {
+      if (obj[key] === undefined) obj[key] = val;
+    });
+  });
+  return obj;
+};
+
+_.isNaN = function(val) {
+  return val !== undefined && isNaN(val);
+};
+
+_.clone = function(obj) {
+  if (_.isUndefined(obj) || _.isNull(obj) || !_.isObject(obj)) return obj;
+  return _.extendOwn({}, obj);
+};
+
+_.create = function(proto, props) {
+  if (_.isArray(proto)) return proto.concat();
+  if (_.isUndefined(proto) || _.isNull(proto) || !_.isObject(proto)) return {};
+  let result = Object.create(proto);
+  return _.assign(result, props);
+};
+
+_.isEqual = function(obj, other) {
+  let r1 = Object.is(obj, other);
+  if (_.isNull(obj) || _.isNull(other)) return r1;
+  if (_.isUndefined(obj) || _.isUndefined(other)) return r1;
+
+  function isAny(obj1, obj2, constructor) {
+    let o1c = obj1.constructor.name === constructor;
+    let o2c = obj2.constructor.name === constructor;
+    return o1c || o2c;
+  }
+
+  function isAll(obj1, obj2, constructor) {
+    let o1c = obj1.constructor.name === constructor;
+    let o2c = obj2.constructor.name === constructor;
+    return o1c && o2c;
+  }
+
+  let any = _.partial(isAny, obj, other);
+  let all = _.partial(isAll, obj, other);
+  if (any('Number')) {
+    return all('Number') && Object.is(obj.valueOf(), other.valueOf());
+  }
+  if (any('Boolean')) {
+    return all('Boolean') && Object.is(obj.valueOf(), other.valueOf());
+  }
+  if (any('Date')) {
+    return all('Date') && obj.valueOf() === other.valueOf();
+  }
+  if (any('RegExp')) {
+    return all('RegExp') && obj.toString() === other.toString();
+  }
+  if (any('Array')) {
+    return all('Array') && obj === other;
+  }
+  let r2 = false;
+  let type = typeof obj;
+  let ifAnyString = type === 'string' || typeof  other === 'string';
+  let ifAny = ifAnyString;
+  if (ifAny || (!_.isNull(obj) && !_.isUndefined(obj) && type === 'object')) {
+    r2 = _.every(obj, function(val, key) {
+      return other[key] === val;
+    });
+  }
+  return r1 || r2;
+};
+//*********Objects module ends*********//
