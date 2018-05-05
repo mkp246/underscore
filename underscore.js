@@ -1233,15 +1233,19 @@ _.isEqual = function(obj, other) {
   if (_.isUndefined(obj) || _.isUndefined(other)) return r1;
 
   function isAny(obj1, obj2, constructor) {
-    let o1c = obj1.constructor.name === constructor;
-    let o2c = obj2.constructor.name === constructor;
+    let o1c = obj1.constructor ? obj1.constructor.name === constructor : false;
+    let o2c = obj2.constructor ? obj2.constructor.name === constructor : false;
     return o1c || o2c;
   }
 
   function isAll(obj1, obj2, constructor) {
-    let o1c = obj1.constructor.name === constructor;
-    let o2c = obj2.constructor.name === constructor;
+    let o1c = obj1.constructor ? obj1.constructor.name === constructor : false;
+    let o2c = obj2.constructor ? obj2.constructor.name === constructor : false;
     return o1c && o2c;
+  }
+
+  function isAnyProtoUndefined(obj1, obj2) {
+    return _.isUndefined(obj1.__proto__) || _.isUndefined(obj2.__proto__);
   }
 
   let any = _.partial(isAny, obj, other);
@@ -1258,9 +1262,37 @@ _.isEqual = function(obj, other) {
   if (any('RegExp')) {
     return all('RegExp') && obj.toString() === other.toString();
   }
-  if (any('Array')) {
-    return all('Array') && obj === other;
+  if (any('Symbol')) {
+    return obj.valueOf() === other.valueOf();
   }
+  let sameType = _.isSameProto(obj, other);
+  let sameLength = obj.length === other.length;
+  if (!isAnyProtoUndefined(obj, other)) {
+    if (!(sameType && sameLength)) return false;
+    if (any('Array') || any('Object')) {
+      if (_.isSparse(obj) && _.isSparse(other)) return sameLength && sameType;
+      if (sameType && sameLength && _.anySparse(obj) && _.anySparse(other)) {
+        let sparseResult = true;
+        for (let i = 0; i < obj.length; i++) {
+          if (obj[i] !== other[i]) {
+            sparseResult = false;
+            break;
+          }
+        }
+        return sparseResult;
+      }
+      let isLastMaxLen = Object.keys(obj).length < Object.keys(other).length;
+      if (isLastMaxLen) {
+        let tmp = obj;
+        obj = other;
+        other = tmp;
+      }
+      return sameType && sameLength && _.every(obj, function(val, key) {
+        return _.hasOwnProperty(other, key) && _.isEqual(val, other[key]);
+      });
+    }
+  }
+
   let r2 = false;
   let type = typeof obj;
   let ifAnyString = type === 'string' || typeof  other === 'string';
@@ -1272,4 +1304,17 @@ _.isEqual = function(obj, other) {
   }
   return r1 || r2;
 };
+
+_.isSparse = function(obj) {
+  return _.every(obj, val => val === undefined);
+};
+
+_.anySparse = function(obj) {
+  return _.any(obj, val => val === undefined);
+};
+
+_.isSameProto = function(obj1, obj2) {
+  return obj1.constructor === obj2.constructor;
+};
+
 //*********Objects module ends*********//
