@@ -155,7 +155,10 @@ _.isNumber = function(input) {
 };
 
 _.isObject = function(input) {
-  return typeof input === 'object';
+  if (null === input || undefined === input) return false;
+  let type = typeof input;
+  if ('number' === type || 'string' === type || 'boolean' === type) return false;
+  return 'object' === type || 'function' === type;
 };
 
 _.hasOwnProperty = function(object, key) {
@@ -1317,4 +1320,71 @@ _.isSameProto = function(obj1, obj2) {
   return obj1.constructor === obj2.constructor;
 };
 
+_.isEmpty = function(obj) {
+  [obj] = fixOOArgs(this, arguments);
+  if (_.isNull(obj) || _.isUndefined(obj)) return true;
+  return Object.keys(obj).length <= 0;
+};
+
+_.isArguments = function(obj) {
+  return obj.callee !== undefined;
+};
+
+_.isString = function(obj) {
+  return _.isProto(obj, 'String');
+};
+
+_.isSymbol = function(obj) {
+  return _.isProto(obj, 'Symbol');
+};
+
+_.isBoolean = function(obj) {
+  if (obj === false) return true;
+  return _.isProto(obj, 'Boolean');
+};
+
+_.isMap = function(obj) {
+  return _.isProto(obj, 'Map');
+};
+
+_.isProto = function(obj, protoName) {
+  return obj && (obj.constructor.name === protoName);
+};
+
+_.isWeakMap = function(obj) {
+  return _.isProto(obj, 'WeakMap');
+};
+
+_.isSet = function(obj) {
+  return _.isProto(obj, 'Set');
+};
+
+_.isWeakSet = function(obj) {
+  return _.isProto(obj, 'WeakSet');
+};
+
+_.isFunction = function(obj) {
+  return _.isProto(obj, 'Function') || typeof obj === 'function';
+};
+
+_.chain = function(obj) {
+  const handler = {
+    get: function(target, propKey) {
+      if (propKey === 'compact') return function() {
+        return _.chain(obj);
+      };
+      return function(...args) {
+        obj = _.partial(target[propKey], obj)(...args);
+        return _.chain(obj);
+      };
+    },
+  };
+  return new Proxy(_, handler);
+};
+
+_.propertyOf = function(obj) {
+  return function(key) {
+    return obj[key];
+  };
+};
 //*********Objects module ends*********//
