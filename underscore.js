@@ -162,13 +162,25 @@ _.isObject = function(input) {
 };
 
 _.hasOwnProperty = function(object, key) {
-  var obj = {};
   if (!_.isObject(object)) {
     key = object;
     object = this;
   }
-  return obj.__proto__.hasOwnProperty.call(object, key);
-};
+  if (_.isArray(key)) {
+    let newKey = key.concat();
+    while (newKey.length) {
+      let currentKey = newKey.splice(0, 1);
+      if (Object.hasOwnProperty.call(object, currentKey)) {
+        object = object[currentKey];
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+  return Object.hasOwnProperty.call(object, key);
+}
+;
 
 _.all = _.every;
 
@@ -1215,6 +1227,7 @@ _.defaults = function(obj, ...defaults) {
 };
 
 _.isNaN = function(val) {
+  if (_.isProto(val, 'Symbol')) return false;
   return val !== undefined && isNaN(val);
 };
 
@@ -1348,7 +1361,7 @@ _.isMap = function(obj) {
 };
 
 _.isProto = function(obj, protoName) {
-  return obj && (obj.constructor.name === protoName);
+  return obj !== undefined && obj !== null && (obj.constructor.name === protoName);
 };
 
 _.isWeakMap = function(obj) {
@@ -1368,11 +1381,21 @@ _.isFunction = function(obj) {
 };
 
 _.chain = function(obj) {
+  obj = obj || this.obj;
   const handler = {
     get: function(target, propKey) {
       if (propKey === 'compact') return function() {
         return _.chain(obj);
       };
+      if (propKey === 'value') return function() {
+        return obj;
+      };
+      if (propKey === 'tap') {
+        return function(tapAction) {
+          tapAction(obj);
+          return _.chain(obj);
+        };
+      }
       return function(...args) {
         obj = _.partial(target[propKey], obj)(...args);
         return _.chain(obj);
@@ -1387,4 +1410,25 @@ _.propertyOf = function(obj) {
     return obj[key];
   };
 };
+
+_.isDate = function(obj) {
+  return _.isProto(obj, 'Date');
+};
+
+_.isFinite = function(obj) {
+  if (_.isNull(obj) || _.isUndefined(obj) || _.isSymbol(obj) || _.isNaN(obj)) return false;
+  if (/^-?Infinity$/.test(obj.toString())) return false;
+  if (_.isString(obj) && obj.length === 0) return false;
+  return !_.isNaN(Number(obj));
+};
+
+_.isError = function(obj) {
+  return Error.prototype.isPrototypeOf(obj);
+};
+
+_.tap = function(obj, interceptor) {
+  interceptor(obj);
+  return obj;
+};
+
 //*********Objects module ends*********//
