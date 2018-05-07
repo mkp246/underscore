@@ -151,7 +151,7 @@ _.every = function(obj, pred, context) {
 };
 
 _.isNumber = function(input) {
-  return typeof input === 'number';
+  return _.isProto(input, 'Number');
 };
 
 _.isObject = function(input) {
@@ -1338,7 +1338,7 @@ _.anySparse = function(obj) {
 };
 
 _.isSameProto = function(obj1, obj2) {
-  return obj1.constructor === obj2.constructor;
+  return obj1.constructor.name === obj2.constructor.name;
 };
 
 _.isEmpty = function(obj) {
@@ -1431,7 +1431,7 @@ _.isFinite = function(obj) {
 };
 
 _.isError = function(obj) {
-  return Error.prototype.isPrototypeOf(obj);
+  return Error.prototype.isPrototypeOf(obj) || _.isProto(obj, 'Error');
 };
 
 _.tap = function(obj, interceptor) {
