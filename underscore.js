@@ -545,7 +545,7 @@ _.reduce = function(obj, callback, init, context) {
   if (Array.isArray(obj) && obj.length === 1 && init === undefined) {
     return obj[0];
   }
-  var current = init || 0;
+  let current = init || 0;
   callback = callback || function(memo, num) {
     return memo + num;
   };
@@ -558,9 +558,10 @@ _.reduce = function(obj, callback, init, context) {
     }
     return current;
   } else {
-    _.each(obj, function(val, idx, arr) {
-      callback(current, val, idx, arr);
+    _.each(obj, function(val, key) {
+      current = callback.bind(context)(current, val, key, obj);
     });
+    if (!_.isUndefinedOrNull(current)) return current;
     return obj.length === null ? null : obj.length || Object.keys(obj).length;
   }
 };
@@ -621,27 +622,27 @@ _.findLastIndex = function(obj, callback, context) {
   }
 };
 
-_.mapObject = function(obj, cb, init) {
-  [obj, cb, init] = fixOOArgs(this, arguments);
-  if (obj === null) return [];
+_.mapObject = function(obj, cb, context) {
+  [obj, cb, context] = fixOOArgs(this, arguments);
+  if (obj === null) return {};
+  if (typeof obj !== 'object') return {};
   let callback = _.iteratee(cb);
   let result = {};
   _.each(obj, function(val, key, obj) {
-    result[key] = callback(val, key, obj);
+    result[key] = callback.bind(context)(val, key, obj);
   });
   return result;
 };
 
-_.findKey = function(obj, cb, init) {
-  var current = init || 0;
-  let callback = _.iteratee(cb);
-  callback = callback || function(memo, num) {
-    return memo + num;
-  };
-
-  for (let i = current, length = obj.length; i < length; i++) {
-    if (callback(obj[i], i, obj)) return i.toString();
-  }
+_.findKey = function(obj, pred, context) {
+  let callback = _.iteratee(pred);
+  let resultKey = undefined;
+  let any = _.any(_.keys(obj), function(key) {
+    let cbResult = callback.bind(context)(obj[key], key, obj);
+    if (cbResult) resultKey = key;
+    return cbResult;
+  });
+  return any ? resultKey : undefined;
 };
 
 _.pick = function(obj, ...cb) {
@@ -1135,10 +1136,17 @@ _.iteratee = function(value, context) {
   else if (typeof value === 'function') return value;
   else if (_.isArray(value)) return obj => {
     let result = obj;
-    _.each(value, key => result = result[key]);
+    _.each(value, key => {
+      if (_.isNull(result)) result = undefined;
+      if (!_.isUndefined(result)) result = result[key];
+    });
     return result;
   };
   else if (typeof value === 'number' || typeof value === 'string') return obj => obj[value];
+};
+
+_.isUndefinedOrNull = function(obj) {
+  return _.isNull(obj) || _.isUndefined(obj);
 };
 
 _.isRegExp = function(val) {
@@ -1407,7 +1415,7 @@ _.chain = function(obj) {
 
 _.propertyOf = function(obj) {
   return function(key) {
-    return obj[key];
+    return _.property(key)(obj);
   };
 };
 
@@ -1430,5 +1438,35 @@ _.tap = function(obj, interceptor) {
   interceptor(obj);
   return obj;
 };
+
+_.property = function(key) {
+  return function(obj) {
+    if (_.isNull(obj) || _.isUndefined(obj)) return;
+    if (_.isArray(key) && key.length > 0) return _.iteratee(key)(obj);
+    _.propertyOf();
+    return obj[key];
+  };
+};
+
+_.isMatch = function(obj, props) {
+  if (_.isNull(obj)) {
+    return _.isUndefinedOrNull(props) || (typeof props === 'object' && Object.keys(props).length === 0);
+  }
+  if (_.isUndefinedOrNull(props)) {
+    return true;
+  }
+  return _.every(props, function(val, key) {
+    return (_.hasOwnProperty(obj, key) || _.allKeys(obj).indexOf(key) !== -1) && obj[key] === val;
+  });
+};
+
+_.matcher = function(props) {
+  props = _.clone(props);
+  return function(obj) {
+    return _.isMatch(obj, props);
+  };
+};
+
+_.matches = _.matcher;
 
 //*********Objects module ends*********//
