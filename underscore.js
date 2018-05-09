@@ -1,5 +1,6 @@
 //******Collection module start*********//
 var _ = function(input) {
+  if (input.__proto__ === _) return input;
   var newObject = Object.create(_);
   newObject.obj = input;
   return newObject;
@@ -20,9 +21,13 @@ _.each = function(array, callback, context) {
 };
 
 _.times = function(count, callback, context) {
-  while (count--) {
-    callback.bind(context)();
+  let i = 0;
+  let result = [];
+  [count, callback, context] = fixOOArgs(this, arguments);
+  while (i < count) {
+    result.push(callback.bind(context)(i++));
   }
+  return result;
 };
 
 _.forEach = _.each;
@@ -1470,3 +1475,71 @@ _.matcher = function(props) {
 _.matches = _.matcher;
 
 //*********Objects module ends*********//
+//*********Utility module starts********//
+
+_.noConflict = function() {
+  return this;
+};
+
+_.noop = function(...args) {
+  return void 0;
+};
+
+_.random = function(min, max) {
+  if (max === undefined) {
+    max = min;
+    min = 0;
+  }
+  let result = Math.random() * (max - min) + min;
+  return Math.floor(result);
+};
+
+_.now = function() {
+  return Date.now();
+};
+
+_.uniqueId = function(prefix) {
+  return (Math.random().toString(16).substring(2) + Math.random().toString(16).substring(2) + Math.random().toString(16).substring(2)).substring(0, 32);
+};
+
+_.mixin = function(obj) {
+  _.each(obj, function(func, funcName) {
+    this[funcName] = function(...args) {
+      [...args] = fixOOArgs(this, arguments);
+      return func(...args);
+    };
+  }, this);
+  return this;
+};
+
+_.escape = function(string) {
+  let result = encodeURI(string || '');
+  return result.replace(/'/g, '%27');
+};
+
+_.unescape = function(string) {
+  let result = decodeURI(string || '');
+  return result.replace(/%27/g, '\'');
+};
+
+_.template = function(templateString, settings) {
+  return function(data) {
+    settings = _.extend(settings || {}, data);
+    let result = templateString.replace(/<%= *(.*)%>/g, function(match, p1, offset, string) {
+      p1 = p1.trim();
+      return (settings && settings[p1]) || (data && data[p1]);
+    });
+    result = result.replace(/<% *(.*)%>/g, function(match, p1, offset, string) {
+      p1 = p1.trim();
+      return (settings && settings[p1]) || (data && data[p1]) || '';
+    });
+    result = result.replace(/<%= *(.*)%>/g, function(match, p1, offset, string) {
+      p1 = p1.trim();
+      return (settings && settings[p1]) || (data && data[p1]);
+    });
+    return result;
+  };
+};
+
+
+//*********Utility module ends*********//
