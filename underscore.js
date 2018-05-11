@@ -1393,31 +1393,6 @@ _.isFunction = function(obj) {
   return _.isProto(obj, 'Function') || typeof obj === 'function';
 };
 
-_.chain = function(obj) {
-  obj = obj || this.obj;
-  const handler = {
-    get: function(target, propKey) {
-      if (propKey === 'compact') return function() {
-        return _.chain(obj);
-      };
-      if (propKey === 'value') return function() {
-        return obj;
-      };
-      if (propKey === 'tap') {
-        return function(tapAction) {
-          tapAction(obj);
-          return _.chain(obj);
-        };
-      }
-      return function(...args) {
-        obj = _.partial(target[propKey], obj)(...args);
-        return _.chain(obj);
-      };
-    },
-  };
-  return new Proxy(_, handler);
-};
-
 _.propertyOf = function(obj) {
   return function(key) {
     return _.property(key)(obj);
@@ -1541,5 +1516,69 @@ _.template = function(templateString, settings) {
   };
 };
 
+_.result = function(obj, prop, defaultValue) {
+  if (_.isUndefinedOrNull(obj) || _.isUndefinedOrNull(prop) || prop === [] || (_.allKeys(obj).length === 0 && Object.getOwnPropertySymbols(obj).length === 0)) {
+    return _.exec(defaultValue, undefined);
+  }
+  let val = obj;
+  let lastGood = obj;
+  if (!_.isArray(prop)) val = val[prop];
+  else {
+    _.each(prop, function(key) {
+      if (!_.isUndefined(val)) {
+        val = _.exec(val[key], val);
+        if (!_.isUndefined(val)) lastGood = val;
+      }
+    });
+  }
+  if (val === undefined) return _.exec(defaultValue, lastGood);
+  return _.isFunction(val) ? val.call(lastGood) : val;
+};
+
+_.exec = function(value, context, ...args) {
+  return _.isFunction(value) ? value.call(context, ...args) : value;
+};
 
 //*********Utility module ends*********//
+//*********Chaining module starts*********//
+
+_.chain = function(obj) {
+  obj = obj || this.obj;
+  const handler = {
+    get: function(target, propKey) {
+      if (propKey === 'compact') return function() {
+        return _.chain(obj);
+      };
+      if (propKey === 'value') return function() {
+        return obj;
+      };
+      if (propKey === 'tap') {
+        return function(tapAction) {
+          tapAction(obj);
+          return _.chain(obj);
+        };
+      }
+      return function(...args) {
+        if (!_.isUndefined(target[propKey])) {
+          obj = _.partial(target[propKey], obj)(...args);
+        } else {
+          let tmpResult = obj[propKey].call(obj, ...args);
+          if (_.isSameProto(tmpResult, obj)) obj = tmpResult;
+        }
+        return _.chain(obj);
+      };
+    },
+  };
+  return new Proxy(_, handler);
+};
+
+_.reverse = function(array) {
+  return array.concat().reverse();
+};
+
+_.splice = function(array, start, count) {
+  let result = array.concat();
+  result.splice(start, count);
+  return result;
+};
+//*********Chaining module ends*********//
