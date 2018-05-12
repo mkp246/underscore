@@ -1,4 +1,4 @@
-functions:throttle(leading/trailing), debounce
+functions:throttle(trailing,system time,cancel), debounce
 Utility:template
 Objects:circular reference
 chaining:chaining works in small group

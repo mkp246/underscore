@@ -1016,24 +1016,44 @@ _.throttle = function (func, wait, opts) {
     } else {
       clearInterval(interval);
       interval = undefined;
+      running = false;
     }
   }
 
   let interval = undefined;
   let ctx = [];
-  return function xx(...args) {
+  let running = false;
+
+  function xx(...args) {
     argx = args;
     if (!initDone && leading) {
       initDone = true;
+      running = true;
       lastResult = func.bind(this)(...argx);
       interval = setInterval(handler, wait);
+    } else if (!initDone && !leading) {
+      initDone = true;
+      running = true;
+      pending++;
+      interval = setInterval(handler, wait);
+    } else if (!leading && running) {
+      //ignore calls
     } else {
       pending++;
       ctx.push(this);
-      if (_.isUndefined(interval)) interval = setInterval(handler, wait);
+      if (_.isUndefined(interval)) {
+        interval = setInterval(handler, wait);
+        running = true;
+      }
     }
     return lastResult;
+  }
+
+  xx.cancel = function () {
+    clearInterval(interval);
+    pending = 0;
   };
+  return xx;
 };
 
 _.debounce = function (func, wait, immediate) {
