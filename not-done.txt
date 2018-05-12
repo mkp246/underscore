@@ -1,5 +1,5 @@
 functions:throttle, debounce
-Utility:template, interpolates
+Utility:template
+Objects:circular reference
 chaining:chaining works in small group
-        :Engine proxies for chained functions
 todos

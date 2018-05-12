@@ -1578,4 +1578,17 @@ _.splice = function(array, start, count) {
   result.splice(start, count);
   return result;
 };
+
+_.toJSON = function(obj) {
+  [obj] = fixOOArgs(this, arguments);
+  return JSON.parse(obj);
+};
+
+_.valueOf = function() {
+  return this.obj;
+};
+
+_.toString = function() {
+  return this.obj.toString();
+};
 //*********Chaining module ends*********//
