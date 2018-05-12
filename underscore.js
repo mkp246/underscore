@@ -65,28 +65,12 @@ _.find = function(array, pred) {
     return array.length;
   }
   if (Array.isArray(array)) {
-    if (typeof predicate === 'function') {
-      return array.find(predicate);
-    } else {
-      return array.find(function(value) {
-        return Object.keys(predicate).every(function(key) {
-          return value[key] === predicate[key];
-        });
-      });
-    }
+    return array.find(predicate);
   } else {
-    if (typeof predicate === 'function') {
-      var idx = Object.keys(array).find(function(key) {
-        return predicate(array[key], key);
-      });
-      return array[idx];
-    } else {
-      return Object.values(array).find(function(value) {
-        return Object.keys(predicate).every(function(key) {
-          return value[key] === predicate[key];
-        });
-      });
-    }
+    let idx = Object.keys(array).find(function(key) {
+      return predicate(array[key], key);
+    });
+    return array[idx];
   }
 };
 
@@ -106,6 +90,7 @@ _.findIndex = function(obj, pred, context) {
 _.detect = _.find;
 
 _.filter = function(obj, pred, context) {
+  [obj, pred, context] = fixOOArgs(this, arguments);
   let predicate = _.iteratee(pred);
   var result = [];
   if (Array.isArray(obj)) {
@@ -543,8 +528,7 @@ _.reduce = function(obj, callback, init, context) {
     obj = this.obj;
   }
   if (obj === null) return init;
-  if (Array.isArray(obj) && !Boolean(obj.length) && callback === undefined &&
-      init === void 0) {
+  if (Array.isArray(obj) && !Boolean(obj.length) && init === void 0) {
     return void 0;
   }
   if (Array.isArray(obj) && obj.length === 1 && init === undefined) {
@@ -552,7 +536,14 @@ _.reduce = function(obj, callback, init, context) {
   }
   let current = init || 0;
   callback = callback || function(memo, num) {
-    return memo + num;
+    if (_.isString(num)) {
+      memo = memo || '';
+      return memo + num;
+    } else if (_.isNull(num) || _.isObject(num)) {
+      return num;
+    } else {
+      return memo + num;
+    }
   };
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
@@ -581,8 +572,7 @@ _.reduceRight = function(obj, callback, init, context) {
     obj = this.obj;
   }
   if (obj === null) return init;
-  if (Array.isArray(obj) && !Boolean(obj.length) && callback === undefined &&
-      init === void 0) {
+  if (Array.isArray(obj) && !Boolean(obj.length) && init === void 0) {
     return void 0;
   }
   if (Array.isArray(obj) && obj.length === 1 && init === undefined) {
@@ -1148,6 +1138,13 @@ _.iteratee = function(value, context) {
     return result;
   };
   else if (typeof value === 'number' || typeof value === 'string') return obj => obj[value];
+  else if (_.isObject(value)) {
+    return function(obj) {
+      return Object.keys(value).every(function(key) {
+        return value[key] === obj[key];
+      });
+    };
+  }
 };
 
 _.isUndefinedOrNull = function(obj) {
