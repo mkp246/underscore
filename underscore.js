@@ -1340,7 +1340,7 @@ _.anySparse = function(obj) {
 };
 
 _.isSameProto = function(obj1, obj2) {
-  return obj1.constructor.name === obj2.constructor.name;
+  return (obj1.constructor && obj1.constructor.name) === (obj2.constructor && obj2.constructor.name);
 };
 
 _.isEmpty = function(obj) {
