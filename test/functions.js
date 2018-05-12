@@ -252,8 +252,10 @@
     _.delay(function(){
       assert.strictEqual(counter, 2);
       throttledIncr();
-      assert.strictEqual(counter, 3);
-      done();
+      _.delay(function () {
+        assert.strictEqual(counter, 3);
+        done();
+      }, 30);
     }, 85);
   });
 

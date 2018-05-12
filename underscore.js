@@ -1,26 +1,26 @@
 //******Collection module start*********//
-var _ = function(input) {
+var _ = function (input) {
   if (input.__proto__ === _) return input;
   var newObject = Object.create(_);
   newObject.obj = input;
   return newObject;
 };
 
-_.each = function(array, callback, context) {
+_.each = function (array, callback, context) {
   if (!Boolean(array)) return null;
   if (Array.isArray(array)) {
     for (var i = 0, length = array.length; i < length; i++) {
       callback.bind(context)(array[i], i, array);
     }
   } else {
-    Object.keys(array).forEach(function(key) {
+    Object.keys(array).forEach(function (key) {
       callback.bind(context)(array[key], key, array);
     });
   }
   return array;
 };
 
-_.times = function(count, callback, context) {
+_.times = function (count, callback, context) {
   let i = 0;
   let result = [];
   [count, callback, context] = fixOOArgs(this, arguments);
@@ -31,13 +31,13 @@ _.times = function(count, callback, context) {
 };
 
 _.forEach = _.each;
-_.constant = function(val) {
-  return function() {
+_.constant = function (val) {
+  return function () {
     return val;
   };
 };
 
-_.map = function(obj, cb, context) {
+_.map = function (obj, cb, context) {
   [obj, cb, context] = fixOOArgs(this, arguments);
   if (obj === null) return [];
   var result = [];
@@ -49,7 +49,7 @@ _.map = function(obj, cb, context) {
     }
     return result;
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       result.push(callback(obj[key], key));
     });
     return result;
@@ -58,7 +58,7 @@ _.map = function(obj, cb, context) {
 
 _.collect = _.map;
 
-_.find = function(array, pred) {
+_.find = function (array, pred) {
   let predicate = _.iteratee(pred);
   if (predicate === undefined) {
     _.each(array, predicate);
@@ -67,21 +67,21 @@ _.find = function(array, pred) {
   if (Array.isArray(array)) {
     return array.find(predicate);
   } else {
-    let idx = Object.keys(array).find(function(key) {
+    let idx = Object.keys(array).find(function (key) {
       return predicate(array[key], key);
     });
     return array[idx];
   }
 };
 
-_.findIndex = function(obj, pred, context) {
+_.findIndex = function (obj, pred, context) {
   if (obj === undefined || obj === null) return -1;
   let predicate = _.iteratee(pred);
   if (typeof predicate === 'string') predicate = val => _.isTrue(val[pred]);
   if (Array.isArray(obj)) {
     return obj.findIndex(predicate.bind(context));
   } else {
-    Object.keys(obj).find(function(key) {
+    Object.keys(obj).find(function (key) {
       return callback.bind(context)(obj[key], key);
     });
   }
@@ -89,7 +89,7 @@ _.findIndex = function(obj, pred, context) {
 
 _.detect = _.find;
 
-_.filter = function(obj, pred, context) {
+_.filter = function (obj, pred, context) {
   [obj, pred, context] = fixOOArgs(this, arguments);
   let predicate = _.iteratee(pred);
   var result = [];
@@ -99,7 +99,7 @@ _.filter = function(obj, pred, context) {
     }
     return result;
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       if (predicate.bind(context)(obj[key], key)) result.push(obj[key]);
     });
     return result;
@@ -108,7 +108,7 @@ _.filter = function(obj, pred, context) {
 
 _.select = _.filter;
 
-_.reject = function(obj, pred, context) {
+_.reject = function (obj, pred, context) {
   let result = [];
   let predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
@@ -117,16 +117,16 @@ _.reject = function(obj, pred, context) {
     }
     return result;
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       predicate.bind(context)(obj[key], key);
     });
   }
 };
 
-_.identity = function(input) {
+_.identity = function (input) {
   return input;
 };
-_.every = function(obj, pred, context) {
+_.every = function (obj, pred, context) {
   let predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
     for (var i = 0, length = obj.length; i < length; i++) {
@@ -134,24 +134,24 @@ _.every = function(obj, pred, context) {
     }
     return true;
   } else {
-    return Object.keys(obj).every(function(key) {
+    return Object.keys(obj).every(function (key) {
       return predicate.bind(context)(obj[key], key);
     });
   }
 };
 
-_.isNumber = function(input) {
+_.isNumber = function (input) {
   return _.isProto(input, 'Number');
 };
 
-_.isObject = function(input) {
+_.isObject = function (input) {
   if (null === input || undefined === input) return false;
   let type = typeof input;
   if ('number' === type || 'string' === type || 'boolean' === type) return false;
   return 'object' === type || 'function' === type;
 };
 
-_.hasOwnProperty = function(object, key) {
+_.hasOwnProperty = function (object, key) {
   if (!_.isObject(object)) {
     key = object;
     object = this;
@@ -174,10 +174,10 @@ _.hasOwnProperty = function(object, key) {
 
 _.all = _.every;
 
-_.some = function(obj, pred, context) {
+_.some = function (obj, pred, context) {
   if (typeof pred === 'object') {
-    return obj.some(function(value) {
-      return Object.keys(pred).every(function(key) {
+    return obj.some(function (value) {
+      return Object.keys(pred).every(function (key) {
         return value[key] === pred[key];
       });
     });
@@ -189,7 +189,7 @@ _.some = function(obj, pred, context) {
     }
     return false;
   } else {
-    return Object.keys(obj).some(function(key) {
+    return Object.keys(obj).some(function (key) {
       if (predicate.bind(context)(obj[key], key)) return true;
     });
   }
@@ -197,7 +197,7 @@ _.some = function(obj, pred, context) {
 
 _.any = _.some;
 
-_.include = function(arr, num, fromIndex) {
+_.include = function (arr, num, fromIndex) {
   if (this.obj !== undefined) {
     fromIndex = num;
     num = arr;
@@ -206,13 +206,13 @@ _.include = function(arr, num, fromIndex) {
   if (arr === null || arr === undefined) return false;
   if (typeof fromIndex === 'boolean') fromIndex = 0;
   if (isNaN(num)) {
-    return _.any(arr, function(val) {
+    return _.any(arr, function (val) {
       return isNaN(val);
     });
   }
   if (Array.isArray(arr)) return arr.indexOf(num, fromIndex) > -1;
   if (typeof arr === 'object') {
-    return _.hasOwnProperty(arr, num) || _.any(arr, function(val) {
+    return _.hasOwnProperty(arr, num) || _.any(arr, function (val) {
       return val === num;
     });
   }
@@ -222,14 +222,14 @@ _.include = function(arr, num, fromIndex) {
 _.includes = _.include;
 _.contains = _.include;
 
-_.invoke = function(list, method, ...args) {
+_.invoke = function (list, method, ...args) {
   var result = [];
   var toExecute, context;
-  _.each(list, function(listItem) {
+  _.each(list, function (listItem) {
     context = listItem;
     if (Array.isArray(method)) {
       toExecute = listItem[method[0]];
-      _.each(method.slice(1), function(val) {
+      _.each(method.slice(1), function (val) {
         if (toExecute === undefined) {
           return;
         }
@@ -257,18 +257,18 @@ _.invoke = function(list, method, ...args) {
   return result;
 };
 
-_.pluck = function(array, key) {
+_.pluck = function (array, key) {
   var result = [];
-  _.each(array, function(element) {
+  _.each(array, function (element) {
     result.push(element[key]);
   });
   return result;
 };
 
-_.where = function(list, props) {
+_.where = function (list, props) {
   var result = [];
-  _.each(list, function(item) {
-    if (Object.keys(props).every(function(value) {
+  _.each(list, function (item) {
+    if (Object.keys(props).every(function (value) {
       return props[value] === item[value];
     })) {
       result.push(item);
@@ -277,10 +277,10 @@ _.where = function(list, props) {
   return result;
 };
 
-_.findWhere = function(list, props) {
+_.findWhere = function (list, props) {
   for (let i = 0, length = list.length; i < length; i++) {
     var item = list[i];
-    if (Object.keys(props).every(function(value) {
+    if (Object.keys(props).every(function (value) {
       return props[value] === item[value];
     })) {
       return item;
@@ -288,21 +288,21 @@ _.findWhere = function(list, props) {
   }
 };
 
-_.isUndefined = function(val) {
+_.isUndefined = function (val) {
   return typeof val === 'undefined';
 };
-_.isNull = function(val) {
+_.isNull = function (val) {
   return val === null;
 };
 
-_.max = function(obj, cb, context) {
+_.max = function (obj, cb, context) {
   if (!Boolean(obj)) return -Infinity;
   let callback = _.iteratee(cb);
   let max = -Infinity;
   let maxObj = -Infinity;
   if (Object.keys(obj).length === 0) return -Infinity;
   if (Array.isArray(obj)) {
-    _.each(obj, function(val, idx) {
+    _.each(obj, function (val, idx) {
       let cbResult = callback.bind(context)(val, idx, obj);
       if (cbResult >= max) {
         max = cbResult;
@@ -310,7 +310,7 @@ _.max = function(obj, cb, context) {
       }
     });
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       var cbResult = callback.bind(context)(obj[key], key, obj);
       if (cbResult >= max) {
         max = cbResult;
@@ -321,7 +321,7 @@ _.max = function(obj, cb, context) {
   return maxObj;
 };
 
-_.range = function(start, stop, step) {
+_.range = function (start, stop, step) {
   if (arguments.length == 1) {
     stop = arguments[0];
     start = 0;
@@ -346,14 +346,14 @@ _.range = function(start, stop, step) {
   return result;
 };
 
-_.min = function(obj, cb, context) {
+_.min = function (obj, cb, context) {
   if (!Boolean(obj)) return Infinity;
   let callback = _.iteratee(cb);
   let min = Infinity;
   let minObj = Infinity;
   if (Object.keys(obj).length === 0) return Infinity;
   if (Array.isArray(obj)) {
-    _.each(obj, function(val, idx) {
+    _.each(obj, function (val, idx) {
       var cbResult = callback.bind(context)(val, idx, obj);
       if (cbResult !== null && cbResult <= min) {
         min = cbResult;
@@ -361,7 +361,7 @@ _.min = function(obj, cb, context) {
       }
     });
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       var cbResult = callback.bind(context)(obj[key], key);
       if (cbResult !== null && cbResult <= min) {
         min = cbResult;
@@ -372,10 +372,10 @@ _.min = function(obj, cb, context) {
   return minObj;
 };
 
-_.sortBy = function(array, pred) {
+_.sortBy = function (array, pred) {
   let predicate = _.iteratee(pred);
   if (!Array.isArray(array)) array = Object.values(array);
-  return array.sort(function(val1, val2) {
+  return array.sort(function (val1, val2) {
     let cmp1 = predicate(val1);
     let cmp2 = predicate(val2);
     let cmpResult;
@@ -392,21 +392,21 @@ _.sortBy = function(array, pred) {
   });
 };
 
-_.object = function(list, values) {
+_.object = function (list, values) {
   var result = {};
   if (values === undefined) {
-    _.each(list, function(item) {
+    _.each(list, function (item) {
       result[item[0]] = item[1];
     });
   } else {
-    _.each(list, function(val, idx) {
+    _.each(list, function (val, idx) {
       result[val] = values[idx];
     });
   }
   return result;
 };
 
-_.groupBy = function(obj, pred, context) {
+_.groupBy = function (obj, pred, context) {
   let result = {};
   let predicate = _.iteratee(pred);
   if (predicate === undefined) predicate = _.identity;
@@ -417,14 +417,14 @@ _.groupBy = function(obj, pred, context) {
       result[group].push(obj[i]);
     }
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       predicate.bind(context)(obj[key], key);
     });
   }
   return result;
 };
 
-_.indexBy = function(obj, pred, context) {
+_.indexBy = function (obj, pred, context) {
   var result = {};
   var predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
@@ -433,14 +433,14 @@ _.indexBy = function(obj, pred, context) {
       result[group] = obj[i];
     }
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       predicate.bind(context)(obj[key], key);
     });
   }
   return result;
 };
 
-_.countBy = function(obj, pred, context) {
+_.countBy = function (obj, pred, context) {
   var result = {};
   let predicate = _.iteratee(pred);
   if (Array.isArray(obj)) {
@@ -450,14 +450,14 @@ _.countBy = function(obj, pred, context) {
       result[group]++;
     }
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       predicate.bind(context)(obj[key], key);
     });
   }
   return result;
 };
 
-_.shuffle = function(list) {
+_.shuffle = function (list) {
   if (!Array.isArray(list)) {
     return _.shuffle(Object.values(list));
   } else {
@@ -469,7 +469,7 @@ _.shuffle = function(list) {
   }
 };
 
-_.sample = function(arr, len) {
+_.sample = function (arr, len) {
   len = len || 1;
   if (len < 1) return [];
   if (len === 1) {
@@ -479,22 +479,22 @@ _.sample = function(arr, len) {
   }
 };
 
-_.isArray = function(array) {
+_.isArray = function (array) {
   return Array.isArray(array);
 };
 
-_.toArray = function(obj) {
+_.toArray = function (obj) {
   if (obj.constructor.toString().split(' ')[1] === 'Object()') obj = Object.values(obj);
   return Array.from(obj);
 };
 
-_.size = function(obj) {
+_.size = function (obj) {
   if (obj === undefined || obj === null || typeof obj === 'number') return 0;
   if (obj.length === Object.keys(obj).length - 1) return obj.length;
   return Object.keys(obj).length;
 };
 
-_.partition = function(obj, cb, context) {
+_.partition = function (obj, cb, context) {
   let result = [[], []];
   cb = cb || _.isTrue;
   let callback = _.iteratee(cb);
@@ -505,7 +505,7 @@ _.partition = function(obj, cb, context) {
       result[index].push(obj[i]);
     }
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       var cbResult = callback.bind(context)(obj[key], key, obj);
       var index = Boolean(cbResult) ? 0 : 1;
       result[index].push(obj[key]);
@@ -514,14 +514,14 @@ _.partition = function(obj, cb, context) {
   return result;
 };
 
-_.isTrue = function(val) {
+_.isTrue = function (val) {
   return Boolean(val);
 };
-_.isFalse = function(val) {
+_.isFalse = function (val) {
   return !Boolean(val);
 };
 
-_.reduce = function(obj, callback, init, context) {
+_.reduce = function (obj, callback, init, context) {
   if (this.obj !== undefined) {
     init = callback;
     callback = obj;
@@ -535,7 +535,7 @@ _.reduce = function(obj, callback, init, context) {
     return obj[0];
   }
   let current = init || 0;
-  callback = callback || function(memo, num) {
+  callback = callback || function (memo, num) {
     if (_.isString(num)) {
       memo = memo || '';
       return memo + num;
@@ -554,7 +554,7 @@ _.reduce = function(obj, callback, init, context) {
     }
     return current;
   } else {
-    _.each(obj, function(val, key) {
+    _.each(obj, function (val, key) {
       current = callback.bind(context)(current, val, key, obj);
     });
     if (!_.isUndefinedOrNull(current)) return current;
@@ -565,7 +565,7 @@ _.reduce = function(obj, callback, init, context) {
 _.foldl = _.reduce;
 _.inject = _.reduce;
 
-_.reduceRight = function(obj, callback, init, context) {
+_.reduceRight = function (obj, callback, init, context) {
   if (this.obj !== undefined) {
     init = callback;
     callback = obj;
@@ -579,7 +579,7 @@ _.reduceRight = function(obj, callback, init, context) {
     return obj[0];
   }
   var current = init || 0;
-  callback = callback || function(memo, num) {
+  callback = callback || function (memo, num) {
     return Number(memo) + Number(num);
   };
   if (Array.isArray(obj)) {
@@ -595,7 +595,7 @@ _.reduceRight = function(obj, callback, init, context) {
     }
     return current;
   } else {
-    _.each(Object.keys(obj).reverse(), function(val) {
+    _.each(Object.keys(obj).reverse(), function (val) {
       current = callback(current, obj[val], val, obj);
     });
     var temp = current || ((obj.length === null) ? null : (obj.length || Object.keys(obj).length));
@@ -605,34 +605,34 @@ _.reduceRight = function(obj, callback, init, context) {
 
 _.foldr = _.reduceRight;
 
-_.findLastIndex = function(obj, callback, context) {
+_.findLastIndex = function (obj, callback, context) {
   if (obj === undefined || obj === null) return -1;
   if (Array.isArray(obj)) {
     let result = _.findIndex(obj.slice().reverse(), callback, context);
     return (result === -1) ? -1 : obj.length - 1 - result;
   } else {
-    Object.keys(obj).forEach(function(key) {
+    Object.keys(obj).forEach(function (key) {
       callback(obj[key], key);
     });
   }
 };
 
-_.mapObject = function(obj, cb, context) {
+_.mapObject = function (obj, cb, context) {
   [obj, cb, context] = fixOOArgs(this, arguments);
   if (obj === null) return {};
   if (typeof obj !== 'object') return {};
   let callback = _.iteratee(cb);
   let result = {};
-  _.each(obj, function(val, key, obj) {
+  _.each(obj, function (val, key, obj) {
     result[key] = callback.bind(context)(val, key, obj);
   });
   return result;
 };
 
-_.findKey = function(obj, pred, context) {
+_.findKey = function (obj, pred, context) {
   let callback = _.iteratee(pred);
   let resultKey = undefined;
-  let any = _.any(_.keys(obj), function(key) {
+  let any = _.any(_.keys(obj), function (key) {
     let cbResult = callback.bind(context)(obj[key], key, obj);
     if (cbResult) resultKey = key;
     return cbResult;
@@ -640,7 +640,7 @@ _.findKey = function(obj, pred, context) {
   return any ? resultKey : undefined;
 };
 
-_.pick = function(obj, ...cb) {
+_.pick = function (obj, ...cb) {
   let result = {};
   if (_.isUndefined(obj) || _.isNull(obj)) return result;
   cb = _.flatten(cb);
@@ -648,11 +648,11 @@ _.pick = function(obj, ...cb) {
   if (typeof cb[0] === 'function') {
     context = cb[1];
     callback = _.iteratee(cb[0]);
-    _.each(obj, function(val, key) {
+    _.each(obj, function (val, key) {
       if (callback.call(context, val, key, obj)) result[key] = val;
     });
   } else {
-    _.each(cb, function(key) {
+    _.each(cb, function (key) {
       let val = obj[key];
       if (val !== undefined) result[key] = val;
     });
@@ -662,7 +662,7 @@ _.pick = function(obj, ...cb) {
 
 _.has = _.hasOwnProperty;
 
-_.omit = function(obj, ...cb) {
+_.omit = function (obj, ...cb) {
   let result = _.extend({}, obj);
   if (_.isUndefined(obj) || _.isNull(obj)) return result;
   cb = _.flatten(cb);
@@ -670,25 +670,25 @@ _.omit = function(obj, ...cb) {
   if (typeof cb[0] === 'function') {
     context = cb[1];
     callback = _.iteratee(cb[0]);
-    _.each(obj, function(val, key) {
+    _.each(obj, function (val, key) {
       if (callback.call(context, val, key, obj)) delete result[key];
     });
   } else {
-    _.each(cb, function(key) {
+    _.each(cb, function (key) {
       delete result[key];
     });
   }
   return result;
 };
 
-_.isElement = function(node) {
+_.isElement = function (node) {
   return node.nodeType === Node.ELEMENT_NODE;
 };
 
 //******Collection module ends*********//
 //*********Arrays module starts*********//
 
-var fixOOArgs = function(thisArg, otherArgs) {
+var fixOOArgs = function (thisArg, otherArgs) {
   if (thisArg.obj !== undefined) {
     otherArgs[3] = otherArgs[2];
     otherArgs[2] = otherArgs[1];
@@ -698,7 +698,7 @@ var fixOOArgs = function(thisArg, otherArgs) {
   return _.toArray(otherArgs);
 };
 
-_.first = function(array, n) {
+_.first = function (array, n) {
   [array, n] = fixOOArgs(this, arguments);
   if (array === undefined || array === null || array.length === 0) {
     return void 0;
@@ -712,7 +712,7 @@ _.first = function(array, n) {
 _.head = _.first;
 _.take = _.first;
 
-_.rest = function(array, n) {
+_.rest = function (array, n) {
   [array, n] = fixOOArgs(this, arguments);
   array = _.toArray(array);
   if (n === 0) return array;
@@ -723,7 +723,7 @@ _.rest = function(array, n) {
 _.tail = _.rest;
 _.drop = _.rest;
 
-_.initial = function(array, n) {
+_.initial = function (array, n) {
   [array, n] = fixOOArgs(this, arguments);
   array = _.toArray(array);
   n = n || 1;
@@ -731,7 +731,7 @@ _.initial = function(array, n) {
   return array.slice(0, sliceEnd);
 };
 
-_.last = function(array, n) {
+_.last = function (array, n) {
   [array, n] = fixOOArgs(this, arguments);
   if (array === undefined || array === null || array.length === 0) {
     return void 0;
@@ -744,22 +744,22 @@ _.last = function(array, n) {
   return array.slice(array.length - n);
 };
 
-_.compact = function(array) {
+_.compact = function (array) {
   [array] = fixOOArgs(this, arguments);
   array = _.toArray(array);
   return _.reject(array, _.isFalse);
 };
 
 function pushArray(result, val) {
-  _.each(val, function(val1) {
+  _.each(val, function (val1) {
     result.push(val1);
   });
 }
 
-_.flatten = function(array, shallow) {
+_.flatten = function (array, shallow) {
   if (shallow === undefined) shallow = false;
   var result = [];
-  _.each(array, function(val) {
+  _.each(array, function (val) {
     if (!_.isArray(val)) result.push(val);
     else if (shallow) pushArray(result, val);
     else {
@@ -770,10 +770,10 @@ _.flatten = function(array, shallow) {
   return result;
 };
 
-_.without = function(array, ...values) {
+_.without = function (array, ...values) {
   if (typeof array.callee === 'function') array = _.toArray(array);
   var newArray = array.concat();
-  _.each(values, function(value) {
+  _.each(values, function (value) {
     while (true) {
       var idx = newArray.indexOf(value);
       if (idx === -1) break;
@@ -783,7 +783,7 @@ _.without = function(array, ...values) {
   return newArray;
 };
 
-_.sortedIndex = function(array, value, pred, context) {
+_.sortedIndex = function (array, value, pred, context) {
   let predicate = _.iteratee(pred);
   let toSearch = predicate.bind(context)(value);
   for (let i = 0, length = array.length; i < length; i++) {
@@ -795,7 +795,7 @@ _.sortedIndex = function(array, value, pred, context) {
   return array.length;
 };
 
-_.uniq = function(array, isSorted, pred, context) {
+_.uniq = function (array, isSorted, pred, context) {
   if (typeof isSorted !== 'boolean') {
     context = pred;
     pred = isSorted;
@@ -804,7 +804,7 @@ _.uniq = function(array, isSorted, pred, context) {
   let predicate = _.iteratee(pred);
   let mappedArray = _.map(array, predicate, context);
   let newArray = [];
-  _.each(mappedArray, function(val, index) {
+  _.each(mappedArray, function (val, index) {
     if (mappedArray.indexOf(val) === index) newArray.push(array[index]);
   });
   return newArray;
@@ -812,16 +812,16 @@ _.uniq = function(array, isSorted, pred, context) {
 
 _.unique = _.uniq;
 
-_.intersection = function(arrays) {
+_.intersection = function (arrays) {
   let args = _.toArray(arguments);
   if (args[0] !== null && typeof args[0].callee === 'function') args[0] = _.toArray(args[0]);
   if (this.obj !== undefined) args = [this.obj, ...args];
-  if (_.some(args, function(val) {
+  if (_.some(args, function (val) {
     return val === null;
   })) return [];
   var intersection = [];
-  _.each(args[0], function(val) {
-    var foundInAll = args.every(function(otherArray) {
+  _.each(args[0], function (val) {
+    var foundInAll = args.every(function (otherArray) {
       return otherArray.indexOf(val) !== -1;
     });
     if (foundInAll) intersection.push(val);
@@ -829,28 +829,28 @@ _.intersection = function(arrays) {
   return _.uniq(intersection);
 };
 
-_.union = function(arrays) {
+_.union = function (arrays) {
   let args = _.toArray(arguments);
   if (args[0] !== null && typeof args[0].callee === 'function') args[0] = _.toArray(args[0]);
   if (this.obj !== undefined) args = [this.obj, ...args];
   let union = [];
-  _.each(args, function(array) {
-    _.each(array, function(val) {
+  _.each(args, function (array) {
+    _.each(array, function (val) {
       if (union.indexOf(val) === -1) union.push(val);
     });
   });
   return union;
 };
 
-_.difference = function(array, ...others) {
+_.difference = function (array, ...others) {
   if (this.obj !== undefined) {
     others = [array, ...others];
     array = this.obj;
   }
   if (array !== null && typeof array.callee === 'function') array = _.toArray(array);
   let result = [];
-  _.each(array, function(val) {
-    if (!_.any(others, function(other) {
+  _.each(array, function (val) {
+    if (!_.any(others, function (other) {
       return _.isArray(other) ? other.indexOf(val) !== -1 : false;
     })) {
       result.push(val);
@@ -859,13 +859,13 @@ _.difference = function(array, ...others) {
   return result;
 };
 
-_.zip = function(...arrays) {
+_.zip = function (...arrays) {
   let result = [];
   if (arrays === undefined || arrays.length === 0 || _.any(arrays, _.isNull)) return [];
   let maxArrayLength = _.max(arrays, 'length').length;
   for (let i = 0; i < maxArrayLength; i++) {
     let tempArray = [];
-    _.each(arrays, function(array) {
+    _.each(arrays, function (array) {
       tempArray.push(array[i]);
     });
     result.push(tempArray);
@@ -873,12 +873,12 @@ _.zip = function(...arrays) {
   return result;
 };
 
-_.unzip = function(arrays) {
+_.unzip = function (arrays) {
   let result = [];
   if (arrays === undefined || _.isNull(arrays) || arrays.length === 0) return [];
   for (let i = 0, length = arrays[0].length; i < length; i++) {
     let tempArray = [];
-    _.each(arrays, function(array) {
+    _.each(arrays, function (array) {
       tempArray.push(array[i]);
     });
     result.push(tempArray);
@@ -886,10 +886,10 @@ _.unzip = function(arrays) {
   return result;
 };
 
-_.object = function(list, values) {
+_.object = function (list, values) {
   var result = {};
   if (values === undefined) {
-    _.each(list, function(pair) {
+    _.each(list, function (pair) {
       result[pair[0]] = pair[1];
     });
   } else {
@@ -900,15 +900,15 @@ _.object = function(list, values) {
   return result;
 };
 
-_.pairs = function(obj) {
+_.pairs = function (obj) {
   let result = [];
-  _.each(obj, function(val, key) {
+  _.each(obj, function (val, key) {
     result.push([key, val]);
   });
   return result;
 };
 
-_.indexOf = function(array, val, fromIndex) {
+_.indexOf = function (array, val, fromIndex) {
   if (!Boolean(array) || array.length === 0) return -1;
   if (typeof  array.callee === 'function') array = _.toArray(array);
   if (typeof  fromIndex === 'boolean') fromIndex = undefined;
@@ -918,7 +918,7 @@ _.indexOf = function(array, val, fromIndex) {
   return array.indexOf(val, fromIndex);
 };
 
-_.lastIndexOf = function(array, val, fromIndex) {
+_.lastIndexOf = function (array, val, fromIndex) {
   if (!Boolean(array) || array.length === 0) return -1;
   if (typeof  array.callee === 'function') array = _.toArray(array);
   if (fromIndex === undefined || typeof  fromIndex === 'boolean') {
@@ -934,7 +934,7 @@ _.lastIndexOf = function(array, val, fromIndex) {
   return Array.prototype.lastIndexOf.call(array, val, fromIndex);
 };
 
-_.chunk = function(array, size) {
+_.chunk = function (array, size) {
   if (size === undefined || array.length === 0 || size <= 0) return [];
   let result = [];
   let newArray = array.concat();
@@ -947,19 +947,19 @@ _.chunk = function(array, size) {
 //*********Arrays module ends*********//
 //*********Functions module starts*********//
 
-_.bind = function(fun, context, ...extraArgs) {
+_.bind = function (fun, context, ...extraArgs) {
   [fun, context] = fixOOArgs(this, arguments);
   if (typeof fun !== 'function') {
     throw new TypeError();
   }
-  let result = function(...someMoreArgs) {
+  let result = function (...someMoreArgs) {
     return fun.call(this, ...extraArgs, ...someMoreArgs);
   }.bind(context);
   return result;
 };
 
-_.partial = function(func, ...args) {
-  return function(...someMoreArgs) {
+_.partial = function (func, ...args) {
+  return function (...someMoreArgs) {
     let argsTemp = args.concat();
     let ph = _.partial.placeholder || _;
     while (argsTemp.indexOf(ph) !== -1) {
@@ -970,16 +970,16 @@ _.partial = function(func, ...args) {
   };
 };
 
-_.bindAll = function(obj, ...methods) {
+_.bindAll = function (obj, ...methods) {
   if (methods.length === 0) throw  new Error();
-  _.each(methods, function(method) {
+  _.each(methods, function (method) {
     obj[method] = obj[method].bind(obj);
   });
 };
 
-_.memoize = function(func, hashFunction) {
+_.memoize = function (func, hashFunction) {
   if (hashFunction === undefined) hashFunction = _.identity;
-  let result = function(...args) {
+  let result = function (...args) {
     result.cache = result.cache || {};
     let hash = hashFunction(...args);
     if (!_.hasOwnProperty(result.cache, hash)) {
@@ -991,15 +991,15 @@ _.memoize = function(func, hashFunction) {
   return result;
 };
 
-_.delay = function(func, delay, ...args) {
+_.delay = function (func, delay, ...args) {
   setTimeout(() => func(...args), delay);
 };
 
-_.defer = function(func, ...args) {
+_.defer = function (func, ...args) {
   setTimeout(() => func(...args), 0);
 };
 
-_.throttle = function(func, wait, opts) {
+_.throttle = function (func, wait, opts) {
   let pending = 0;
   let lastResult;
   let leading = true;
@@ -1010,37 +1010,33 @@ _.throttle = function(func, wait, opts) {
   let initDone = false;
 
   function handler() {
-    if (pending !== 0) {
-      clearInterval(intervalChecker);
-      lastResult = func(...argx);
-      pending = Math.max(0, pending - 1);
+    if (pending > 0) {
+      lastResult = func.bind(ctx.splice(0, 1)[0])(...argx);
+      pending -= 1;
     } else {
       clearInterval(interval);
-      intervalChecker = setInterval(() => {
-        if (pending !== 0) {
-          lastResult = func(...argx);
-          pending--;
-          interval = setInterval(handler, wait);
-        }
-      }, 5);
+      interval = undefined;
     }
-  };
+  }
+
   let interval = undefined;
-  let intervalChecker = undefined;
+  let ctx = [];
   return function xx(...args) {
     argx = args;
     if (!initDone && leading) {
-      lastResult = func(...argx);
       initDone = true;
+      lastResult = func.bind(this)(...argx);
       interval = setInterval(handler, wait);
     } else {
       pending++;
+      ctx.push(this);
+      if (_.isUndefined(interval)) interval = setInterval(handler, wait);
     }
     return lastResult;
   };
 };
 
-_.debounce = function(func, wait, immediate) {
+_.debounce = function (func, wait, immediate) {
   let lastRun = 0;
   immediate = immediate || false;
   let lastResult;
@@ -1061,16 +1057,16 @@ _.debounce = function(func, wait, immediate) {
     return lastResult;
   }
 
-  f.cancel = function() {
+  f.cancel = function () {
     cancel = true;
   };
   return f;
 };
 
-_.once = function(func) {
+_.once = function (func) {
   let done = false;
   let result;
-  return function() {
+  return function () {
     if (!done) {
       done = true;
       result = func();
@@ -1079,20 +1075,20 @@ _.once = function(func) {
   };
 };
 
-_.wrap = function(func, wrapper) {
-  return function(...args) {
+_.wrap = function (func, wrapper) {
+  return function (...args) {
     return wrapper.bind(this)(func, ...args);
   };
 };
 
-_.negate = function(predicate) {
-  return function(...args) {
+_.negate = function (predicate) {
+  return function (...args) {
     return !predicate(...args);
   };
 };
 
-_.compose = function(...functions) {
-  return function(...args) {
+_.compose = function (...functions) {
+  return function (...args) {
     let maxIdx = functions.length - 1;
     var result = functions[maxIdx](...args);
     for (let i = maxIdx - 1; i >= 0; i--) {
@@ -1102,9 +1098,9 @@ _.compose = function(...functions) {
   };
 };
 
-_.after = function(count, func) {
+_.after = function (count, func) {
   let currentCount = 0;
-  return function() {
+  return function () {
     if (currentCount < count) currentCount++;
     if (currentCount === count) {
       currentCount = 0;
@@ -1113,10 +1109,10 @@ _.after = function(count, func) {
   };
 };
 
-_.before = function(count, func) {
+_.before = function (count, func) {
   let currentCount = 0;
   let result;
-  return function() {
+  return function () {
     currentCount++;
     if (currentCount < count) {
       result = func.bind(this)();
@@ -1126,7 +1122,7 @@ _.before = function(count, func) {
   };
 };
 
-_.iteratee = function(value, context) {
+_.iteratee = function (value, context) {
   if (value === undefined) return _.identity;
   else if (typeof value === 'function') return value;
   else if (_.isArray(value)) return obj => {
@@ -1139,24 +1135,24 @@ _.iteratee = function(value, context) {
   };
   else if (typeof value === 'number' || typeof value === 'string') return obj => obj[value];
   else if (_.isObject(value)) {
-    return function(obj) {
-      return Object.keys(value).every(function(key) {
+    return function (obj) {
+      return Object.keys(value).every(function (key) {
         return value[key] === obj[key];
       });
     };
   }
 };
 
-_.isUndefinedOrNull = function(obj) {
+_.isUndefinedOrNull = function (obj) {
   return _.isNull(obj) || _.isUndefined(obj);
 };
 
-_.isRegExp = function(val) {
+_.isRegExp = function (val) {
   return val.constructor.toString().startsWith('function RegExp()');
 };
 
-_.restArgs = function(func, startIndex) {
-  return function(...args) {
+_.restArgs = function (func, startIndex) {
+  return function (...args) {
     let newArgs = [];
     if (startIndex === undefined) startIndex = func.length;
     for (let i = 1; i < startIndex; i++) {
@@ -1170,13 +1166,13 @@ _.restArgs = function(func, startIndex) {
 //*********Functions module ends*********//
 //*********Objects module starts*********//
 
-_.keys = function(obj) {
+_.keys = function (obj) {
   let type = typeof obj;
   if (obj === null || type === 'undefined' || type === 'boolean' || type === 'string' || type === 'number') return [];
   return Object.keys(obj);
 };
 
-_.allKeys = function(obj) {
+_.allKeys = function (obj) {
   let type = typeof obj;
   if (obj === null || type === 'undefined' || type === 'boolean' || type === 'string' || type === 'number') return [];
   let result = [];
@@ -1188,37 +1184,37 @@ _.allKeys = function(obj) {
   return result;
 };
 
-_.values = function(obj) {
+_.values = function (obj) {
   return Object.values(obj);
 };
 
-_.invert = function(obj) {
+_.invert = function (obj) {
   let result = {};
-  _.each(_.pairs(obj), function(keyVal) {
+  _.each(_.pairs(obj), function (keyVal) {
     result[keyVal[1]] = keyVal[0];
   });
   return result;
 };
 
-_.functions = function(obj) {
-  return _.filter(_.allKeys(obj), function(key) {
+_.functions = function (obj) {
+  return _.filter(_.allKeys(obj), function (key) {
     return typeof obj[key] === 'function';
   });
 };
 
 _.methods = _.functions;
 
-_.extend = function(destination, ...sources) {
+_.extend = function (destination, ...sources) {
   if (_.isNull(destination) || _.isUndefined(destination)) return destination;
-  _.each(sources, function(source) {
-    _.each(_.allKeys(source), function(key) {
+  _.each(sources, function (source) {
+    _.each(_.allKeys(source), function (key) {
       destination[key] = source[key];
     });
   });
   return destination;
 };
 
-_.extendOwn = function(destination, ...sources) {
+_.extendOwn = function (destination, ...sources) {
   if (_.isNull(destination) || _.isUndefined(destination)) return destination;
   Object.assign(destination, ...sources);
   return destination;
@@ -1226,34 +1222,34 @@ _.extendOwn = function(destination, ...sources) {
 
 _.assign = _.extendOwn;
 
-_.defaults = function(obj, ...defaults) {
+_.defaults = function (obj, ...defaults) {
   if (_.isUndefined(obj) || _.isNull(obj)) obj = defaults.splice(0, 1)[0];
-  _.each(defaults, function(def) {
-    _.each(def, function(val, key) {
+  _.each(defaults, function (def) {
+    _.each(def, function (val, key) {
       if (obj[key] === undefined) obj[key] = val;
     });
   });
   return obj;
 };
 
-_.isNaN = function(val) {
+_.isNaN = function (val) {
   if (_.isProto(val, 'Symbol')) return false;
   return val !== undefined && isNaN(val);
 };
 
-_.clone = function(obj) {
+_.clone = function (obj) {
   if (_.isUndefined(obj) || _.isNull(obj) || !_.isObject(obj)) return obj;
   return _.extendOwn({}, obj);
 };
 
-_.create = function(proto, props) {
+_.create = function (proto, props) {
   if (_.isArray(proto)) return proto.concat();
   if (_.isUndefined(proto) || _.isNull(proto) || !_.isObject(proto)) return {};
   let result = Object.create(proto);
   return _.assign(result, props);
 };
 
-_.isEqual = function(obj, other) {
+_.isEqual = function (obj, other) {
   let r1 = Object.is(obj, other);
   if (_.isNull(obj) || _.isNull(other)) return r1;
   if (_.isUndefined(obj) || _.isUndefined(other)) return r1;
@@ -1313,7 +1309,7 @@ _.isEqual = function(obj, other) {
         obj = other;
         other = tmp;
       }
-      return sameType && sameLength && _.every(obj, function(val, key) {
+      return sameType && sameLength && _.every(obj, function (val, key) {
         return _.hasOwnProperty(other, key) && _.isEqual(val, other[key]);
       });
     }
@@ -1324,100 +1320,100 @@ _.isEqual = function(obj, other) {
   let ifAnyString = type === 'string' || typeof  other === 'string';
   let ifAny = ifAnyString;
   if (ifAny || (!_.isNull(obj) && !_.isUndefined(obj) && type === 'object')) {
-    r2 = _.every(obj, function(val, key) {
+    r2 = _.every(obj, function (val, key) {
       return other[key] === val;
     });
   }
   return r1 || r2;
 };
 
-_.isSparse = function(obj) {
+_.isSparse = function (obj) {
   return _.every(obj, val => val === undefined);
 };
 
-_.anySparse = function(obj) {
+_.anySparse = function (obj) {
   return _.any(obj, val => val === undefined);
 };
 
-_.isSameProto = function(obj1, obj2) {
+_.isSameProto = function (obj1, obj2) {
   return (obj1.constructor && obj1.constructor.name) === (obj2.constructor && obj2.constructor.name);
 };
 
-_.isEmpty = function(obj) {
+_.isEmpty = function (obj) {
   [obj] = fixOOArgs(this, arguments);
   if (_.isNull(obj) || _.isUndefined(obj)) return true;
   return Object.keys(obj).length <= 0;
 };
 
-_.isArguments = function(obj) {
+_.isArguments = function (obj) {
   return obj.callee !== undefined;
 };
 
-_.isString = function(obj) {
+_.isString = function (obj) {
   return _.isProto(obj, 'String');
 };
 
-_.isSymbol = function(obj) {
+_.isSymbol = function (obj) {
   return _.isProto(obj, 'Symbol');
 };
 
-_.isBoolean = function(obj) {
+_.isBoolean = function (obj) {
   if (obj === false) return true;
   return _.isProto(obj, 'Boolean');
 };
 
-_.isMap = function(obj) {
+_.isMap = function (obj) {
   return _.isProto(obj, 'Map');
 };
 
-_.isProto = function(obj, protoName) {
+_.isProto = function (obj, protoName) {
   return obj !== undefined && obj !== null && (obj.constructor.name === protoName);
 };
 
-_.isWeakMap = function(obj) {
+_.isWeakMap = function (obj) {
   return _.isProto(obj, 'WeakMap');
 };
 
-_.isSet = function(obj) {
+_.isSet = function (obj) {
   return _.isProto(obj, 'Set');
 };
 
-_.isWeakSet = function(obj) {
+_.isWeakSet = function (obj) {
   return _.isProto(obj, 'WeakSet');
 };
 
-_.isFunction = function(obj) {
+_.isFunction = function (obj) {
   return _.isProto(obj, 'Function') || typeof obj === 'function';
 };
 
-_.propertyOf = function(obj) {
-  return function(key) {
+_.propertyOf = function (obj) {
+  return function (key) {
     return _.property(key)(obj);
   };
 };
 
-_.isDate = function(obj) {
+_.isDate = function (obj) {
   return _.isProto(obj, 'Date');
 };
 
-_.isFinite = function(obj) {
+_.isFinite = function (obj) {
   if (_.isNull(obj) || _.isUndefined(obj) || _.isSymbol(obj) || _.isNaN(obj)) return false;
   if (/^-?Infinity$/.test(obj.toString())) return false;
   if (_.isString(obj) && obj.length === 0) return false;
   return !_.isNaN(Number(obj));
 };
 
-_.isError = function(obj) {
+_.isError = function (obj) {
   return Error.prototype.isPrototypeOf(obj) || _.isProto(obj, 'Error');
 };
 
-_.tap = function(obj, interceptor) {
+_.tap = function (obj, interceptor) {
   interceptor(obj);
   return obj;
 };
 
-_.property = function(key) {
-  return function(obj) {
+_.property = function (key) {
+  return function (obj) {
     if (_.isNull(obj) || _.isUndefined(obj)) return;
     if (_.isArray(key) && key.length > 0) return _.iteratee(key)(obj);
     _.propertyOf();
@@ -1425,21 +1421,21 @@ _.property = function(key) {
   };
 };
 
-_.isMatch = function(obj, props) {
+_.isMatch = function (obj, props) {
   if (_.isNull(obj)) {
     return _.isUndefinedOrNull(props) || (typeof props === 'object' && Object.keys(props).length === 0);
   }
   if (_.isUndefinedOrNull(props)) {
     return true;
   }
-  return _.every(props, function(val, key) {
+  return _.every(props, function (val, key) {
     return (_.hasOwnProperty(obj, key) || _.allKeys(obj).indexOf(key) !== -1) && obj[key] === val;
   });
 };
 
-_.matcher = function(props) {
+_.matcher = function (props) {
   props = _.clone(props);
-  return function(obj) {
+  return function (obj) {
     return _.isMatch(obj, props);
   };
 };
@@ -1449,15 +1445,15 @@ _.matches = _.matcher;
 //*********Objects module ends*********//
 //*********Utility module starts********//
 
-_.noConflict = function() {
+_.noConflict = function () {
   return this;
 };
 
-_.noop = function(...args) {
+_.noop = function (...args) {
   return void 0;
 };
 
-_.random = function(min, max) {
+_.random = function (min, max) {
   if (max === undefined) {
     max = min;
     min = 0;
@@ -1466,17 +1462,17 @@ _.random = function(min, max) {
   return Math.floor(result);
 };
 
-_.now = function() {
+_.now = function () {
   return Date.now();
 };
 
-_.uniqueId = function(prefix) {
+_.uniqueId = function (prefix) {
   return (Math.random().toString(16).substring(2) + Math.random().toString(16).substring(2) + Math.random().toString(16).substring(2)).substring(0, 32);
 };
 
-_.mixin = function(obj) {
-  _.each(obj, function(func, funcName) {
-    this[funcName] = function(...args) {
+_.mixin = function (obj) {
+  _.each(obj, function (func, funcName) {
+    this[funcName] = function (...args) {
       [...args] = fixOOArgs(this, arguments);
       return func(...args);
     };
@@ -1484,28 +1480,28 @@ _.mixin = function(obj) {
   return this;
 };
 
-_.escape = function(string) {
+_.escape = function (string) {
   let result = encodeURI(string || '');
   return result.replace(/'/g, '%27');
 };
 
-_.unescape = function(string) {
+_.unescape = function (string) {
   let result = decodeURI(string || '');
   return result.replace(/%27/g, '\'');
 };
 
-_.template = function(templateString, settings) {
-  return function(data) {
+_.template = function (templateString, settings) {
+  return function (data) {
     settings = _.extend(settings || {}, data);
-    let result = templateString.replace(/<%= *(.*)%>/g, function(match, p1, offset, string) {
+    let result = templateString.replace(/<%= *(.*)%>/g, function (match, p1, offset, string) {
       p1 = p1.trim();
       return (settings && settings[p1]) || (data && data[p1]);
     });
-    result = result.replace(/<% *(.*)%>/g, function(match, p1, offset, string) {
+    result = result.replace(/<% *(.*)%>/g, function (match, p1, offset, string) {
       p1 = p1.trim();
       return (settings && settings[p1]) || (data && data[p1]) || '';
     });
-    result = result.replace(/<%= *(.*)%>/g, function(match, p1, offset, string) {
+    result = result.replace(/<%= *(.*)%>/g, function (match, p1, offset, string) {
       p1 = p1.trim();
       return (settings && settings[p1]) || (data && data[p1]);
     });
@@ -1513,7 +1509,7 @@ _.template = function(templateString, settings) {
   };
 };
 
-_.result = function(obj, prop, defaultValue) {
+_.result = function (obj, prop, defaultValue) {
   if (_.isUndefinedOrNull(obj) || _.isUndefinedOrNull(prop) || prop === [] || (_.allKeys(obj).length === 0 && Object.getOwnPropertySymbols(obj).length === 0)) {
     return _.exec(defaultValue, undefined);
   }
@@ -1521,7 +1517,7 @@ _.result = function(obj, prop, defaultValue) {
   let lastGood = obj;
   if (!_.isArray(prop)) val = val[prop];
   else {
-    _.each(prop, function(key) {
+    _.each(prop, function (key) {
       if (!_.isUndefined(val)) {
         val = _.exec(val[key], val);
         if (!_.isUndefined(val)) lastGood = val;
@@ -1532,30 +1528,30 @@ _.result = function(obj, prop, defaultValue) {
   return _.isFunction(val) ? val.call(lastGood) : val;
 };
 
-_.exec = function(value, context, ...args) {
+_.exec = function (value, context, ...args) {
   return _.isFunction(value) ? value.call(context, ...args) : value;
 };
 
 //*********Utility module ends*********//
 //*********Chaining module starts*********//
 
-_.chain = function(obj) {
+_.chain = function (obj) {
   obj = obj || this.obj;
   const handler = {
-    get: function(target, propKey) {
-      if (propKey === 'compact') return function() {
+    get: function (target, propKey) {
+      if (propKey === 'compact') return function () {
         return _.chain(obj);
       };
-      if (propKey === 'value') return function() {
+      if (propKey === 'value') return function () {
         return obj;
       };
       if (propKey === 'tap') {
-        return function(tapAction) {
+        return function (tapAction) {
           tapAction(obj);
           return _.chain(obj);
         };
       }
-      return function(...args) {
+      return function (...args) {
         if (!_.isUndefined(target[propKey])) {
           obj = _.partial(target[propKey], obj)(...args);
         } else {
@@ -1569,26 +1565,26 @@ _.chain = function(obj) {
   return new Proxy(_, handler);
 };
 
-_.reverse = function(array) {
+_.reverse = function (array) {
   return array.concat().reverse();
 };
 
-_.splice = function(array, start, count) {
+_.splice = function (array, start, count) {
   let result = array.concat();
   result.splice(start, count);
   return result;
 };
 
-_.toJSON = function(obj) {
+_.toJSON = function (obj) {
   [obj] = fixOOArgs(this, arguments);
   return JSON.parse(obj);
 };
 
-_.valueOf = function() {
+_.valueOf = function () {
   return this.obj;
 };
 
-_.toString = function() {
+_.toString = function () {
   return this.obj.toString();
 };
 //*********Chaining module ends*********//
