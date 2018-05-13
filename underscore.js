@@ -1515,11 +1515,19 @@ _.template = function (templateString, settings) {
     settings = _.extend(settings || {}, data);
     let result = templateString.replace(/<%= *(.*)%>/g, function (match, p1, offset, string) {
       p1 = p1.trim();
-      return (settings && settings[p1]) || (data && data[p1]);
+      with (settings) {
+        return eval(p1);
+      }
     });
     result = result.replace(/<% *(.*)%>/g, function (match, p1, offset, string) {
       p1 = p1.trim();
-      return (settings && settings[p1]) || (data && data[p1]) || '';
+      if (_.keys(settings).length > 0) {
+        with (settings) {
+          return eval(p1);
+        }
+      } else {
+        return '';
+      }
     });
     result = result.replace(/<%= *(.*)%>/g, function (match, p1, offset, string) {
       p1 = p1.trim();
